@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdBrain v2 — Meta Ads AI Analyzer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');
+  :root{--bg:#080b0f;--surface:#0e1318;--surface2:#151c23;--surface3:#1c2530;--border:#1f2d3a;--border2:#2a3d4f;--accent:#00e5ff;--accent-dim:rgba(0,229,255,0.08);--accent-border:rgba(0,229,255,0.2);--green:#00ff87;--green-dim:rgba(0,255,135,0.08);--orange:#ff6b00;--orange-dim:rgba(255,107,0,0.08);--red:#ff3355;--red-dim:rgba(255,51,85,0.08);--yellow:#ffd600;--yellow-dim:rgba(255,214,0,0.08);--purple:#b14aff;--text:#dce8f0;--text2:#7a94a8;--text3:#445566}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;background:radial-gradient(ellipse at 50% 0%,rgba(0,229,255,0.06) 0%,transparent 70%);pointer-events:none;z-index:0}
+  .app{position:relative;z-index:1;display:flex;min-height:100vh}
+  .sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+  .sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+  .logo-mark{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--accent);line-height:1;text-shadow:0 0 20px rgba(0,229,255,0.4)}
+  .logo-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:2px;margin-top:4px}
+  .sidebar-nav{padding:16px 12px;flex:1;display:flex;flex-direction:column;gap:4px}
+  .nav-section{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;padding:12px 8px 6px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border:1px solid transparent;transition:all 0.15s}
+  .nav-item:hover{background:var(--surface2);color:var(--text)}
+  .nav-item.active{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent)}
+  .nav-icon{font-size:15px;width:18px;text-align:center}
+  .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+  .status-indicator{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3)}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+  .status-dot.live{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
+  .main{margin-left:220px;flex:1;min-height:100vh}
+  .topbar{padding:16px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(8,11,15,0.8);backdrop-filter:blur(12px);position:sticky;top:0;z-index:50}
+  .topbar-title{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:1px}
+  .topbar-title span{color:var(--accent)}
+  .content{padding:32px}
+  .panel{display:none;animation:fadeUp 0.25s ease}
+  .panel.active{display:block}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .section-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px}
+  .section-heading{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--text);margin-bottom:6px;line-height:1}
+  .section-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:28px;max-width:560px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px;margin-bottom:16px}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+  .card-title{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+  .card-title::before{content:'';width:2px;height:12px;background:var(--accent);border-radius:1px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);letter-spacing:1px;text-transform:uppercase}
+  .field input,.field select,.field textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:9px 12px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;width:100%}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,0.06)}
+  .field textarea{resize:vertical;min-height:140px;line-height:1.6}
+  .field select option{background:var(--surface2)}
+  .btn{padding:10px 20px;border-radius:6px;border:none;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .btn-primary{background:var(--accent);color:#000}
+  .btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,229,255,0.25)}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-green{background:var(--green);color:#000}
+  .btn-green:hover{filter:brightness(1.1);transform:translateY(-1px)}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+  .badge-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,135,0.2)}
+  .badge-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,51,85,0.2)}
+  .badge-yellow{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(255,214,0,0.2)}
+  .badge-accent{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border)}
+  .badge-purple{background:rgba(177,74,255,0.08);color:var(--purple);border:1px solid rgba(177,74,255,0.2)}
+  .badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+  .creative-row{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:8px;display:grid;grid-template-columns:32px 140px 1fr auto;align-items:center;gap:16px;transition:border-color 0.15s}
+  .creative-row:hover{border-color:var(--border2)}
+  .creative-rank{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text3);text-align:center;line-height:1}
+  .creative-id{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--accent)}
+  .creative-diag{font-size:12px;color:var(--text2);line-height:1.4}
+  .metric-pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .metric-pill{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+  .pill-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:1px}
+  .pill-val{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700}
+  .pill-val.g{color:var(--green)}.pill-val.r{color:var(--red)}.pill-val.y{color:var(--yellow)}.pill-val.n{color:var(--text2)}
+  .action-item{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:8px}
+  .action-item.high{border-left-color:var(--red)}.action-item.medium{border-left-color:var(--yellow)}.action-item.low{border-left-color:var(--text3)}
+  .action-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .action-title{font-size:13px;font-weight:700}
+  .action-desc{font-size:12px;color:var(--text2);line-height:1.6}
+  .brief-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px}
+  .brief-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface3)}
+  .brief-id{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--accent)}
+  .brief-body{padding:16px}
+  .brief-title-text{font-size:14px;font-weight:700;margin-bottom:10px}
+  .brief-instructions{font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'IBM Plex Mono',monospace}
+  .budget-row{display:flex;align-items:center;gap:16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px}
+  .budget-pct{font-family:'Bebas Neue',sans-serif;font-size:24px;min-width:64px;text-align:center;line-height:1}
+  .budget-info{flex:1}
+  .budget-name{font-size:13px;font-weight:700;margin-bottom:3px}
+  .budget-reason{font-size:12px;color:var(--text2)}
+  .loading-overlay{display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center}
+  .loading-overlay.show{display:flex}
+  .loader{width:44px;height:44px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin-bottom:20px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-msg{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)}
+  .loading-step{font-size:11px;color:var(--accent);margin-top:6px}
+  .bg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+  .bg-stat{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+  .bg-stat-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1.5px;margin-bottom:6px}
+  .bg-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--green)}
+  .subid-table{width:100%;border-collapse:collapse}
+  .subid-table th{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text3);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);text-transform:uppercase}
+  .subid-table td{padding:9px 12px;border-bottom:1px solid rgba(31,45,58,0.4);font-family:'IBM Plex Mono',monospace;font-size:12px}
+  .subid-table tr:last-child td{border-bottom:none}
+  .subid-table tr:hover td{background:rgba(255,255,255,0.02)}
+  .progress-bar{height:2px;background:var(--border);border-radius:1px;overflow:hidden;margin-bottom:24px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));width:0%;transition:width 0.6s ease}
+  .copy-btn{background:transparent;border:1px solid var(--border2);color:var(--text3);padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:all 0.15s;letter-spacing:0.5px}
+  .copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .notif{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:11px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);transform:translateY(80px);opacity:0;transition:all 0.25s;z-index:9999;box-shadow:0 8px 32px rgba(0,229,255,0.15)}
+  .notif.show{transform:translateY(0);opacity:1}
+  #analysisOutput{display:none}
+  .sample-btn{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--purple);background:rgba(177,74,255,0.08);border:1px solid rgba(177,74,255,0.2);padding:5px 10px;border-radius:5px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px}
+  .sample-btn:hover{background:rgba(177,74,255,0.15)}
+  .steps{display:flex;flex-direction:column;gap:10px}
+  .step{display:flex;gap:12px}
+  .step-num{width:26px;height:26px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);flex-shrink:0}
+  .step-body{padding-top:3px}
+  .step-title{font-size:13px;font-weight:600;margin-bottom:2px}
+  .step-desc{font-size:12px;color:var(--text2);line-height:1.5}
+  code{font-family:'IBM Plex Mono',monospace;background:var(--surface2);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--accent)}
+  .struct-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+  .inline-tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:20px;width:fit-content}
+  .inline-tab{padding:8px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;border:none;background:var(--surface2);color:var(--text2);transition:all 0.15s;letter-spacing:0.5px}
+  .inline-tab.active{background:var(--accent);color:#000;font-weight:700}
+  .bar-chart{display:flex;flex-direction:column;gap:8px}
+  .bar-row{display:flex;align-items:center;gap:10px}
+  .bar-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);width:80px;flex-shrink:0}
+  .bar-track{flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
+  .bar-val{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text);width:60px;text-align:right;flex-shrink:0}
+
+
+
+  /* DATA PREVIEW */
+  #dataPreviewTable th{background:var(--surface3)}
+  #dataPreviewTable td{vertical-align:middle}
+  .td-name{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);font-size:12px}
+  .td-status-a{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:3px;background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,135,0.2)}
+  .td-status-p{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:3px;background:var(--red-dim);color:var(--red);border:1px solid rgba(255,51,85,0.2)}
+  .td-g{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--green)}
+  .td-r{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--red)}
+  .td-y{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--yellow)}
+  .td-n{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)}
+  /* HELP */
+  .help-section{margin-bottom:28px}
+  .help-section-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .help-icon{font-size:18px}
+  .help-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .help-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px}
+  .help-field-name{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:8px;letter-spacing:0.5px}
+  .help-field-desc{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:8px}
+  .help-field-desc strong{color:var(--text)}
+  .help-tip{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:7px 10px;line-height:1.5;font-family:'IBM Plex Mono',monospace}
+  .help-flow{display:flex;flex-direction:column;gap:0;max-width:560px}
+  .help-flow-step{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+  .help-flow-arrow{text-align:left;padding-left:22px;color:var(--border2);font-size:18px;line-height:1.2}
+  .help-flow-num{width:28px;height:28px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);font-weight:700;flex-shrink:0}
+  .help-flow-content{flex:1}
+  .help-flow-title{font-size:13px;font-weight:700;margin-bottom:4px}
+  .help-flow-desc{font-size:12px;color:var(--text2);line-height:1.5}
+  @media(max-width:700px){.help-grid{grid-template-columns:1fr}}
+  /* OVERVIEW */
+  .ov-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+  .ov-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 16px}
+  .ov-kpi-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+  .ov-kpi-val{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;margin-bottom:4px}
+  .ov-kpi-val.accent{color:var(--accent)}
+  .ov-kpi-change{font-family:'IBM Plex Mono',monospace;font-size:10px}
+  .ov-kpi-change.up{color:var(--green)}.ov-kpi-change.down{color:var(--red)}
+  @media(max-width:900px){.ov-kpi-grid{grid-template-columns:1fr 1fr 1fr}}
+  @media(max-width:600px){.ov-kpi-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.grid-4,.grid-3,.grid-2{grid-template-columns:1fr 1fr}.struct-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:600px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}.content{padding:20px 16px}.creative-row{grid-template-columns:28px 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-mark">AdBrain</div><div class="logo-sub">V2.0 · DRC SYSTEM</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Análise</div>
+    <div class="nav-item active" onclick="showPanel('overview',this)"><span class="nav-icon">📊</span> Visão Geral</div>
+    <div class="nav-item" onclick="showPanel('analyze',this)"><span class="nav-icon">⚡</span> Analisar Campanha</div>
+    <div class="nav-item" onclick="showPanel('buygoods',this)"><span class="nav-icon">💰</span> BuyGoods API</div>
+    <div class="nav-section">Configuração</div>
+    <div class="nav-item" onclick="showPanel('help',this)"><span class="nav-icon">❓</span> Ajuda</div>
+    <div class="nav-item" onclick="showPanel('config',this)"><span class="nav-icon">⚙️</span> Configuração</div>
+    <div class="nav-item" onclick="showPanel('code',this)"><span class="nav-icon">💻</span> Código Python</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="status-indicator"><div class="status-dot" id="apiStatusDot"></div><span id="apiStatusText">API não configurada</span></div>
+  </div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">ADBRAIN / <span id="topbarSection">ANALISAR CAMPANHA</span></div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3)">Próstata · EUA · Meta Ads</div>
+  </div>
+  <div class="content">
+
+    <!-- PANEL: OVERVIEW -->
+    <div id="panel-overview" class="panel active">
+      <div class="section-eyebrow">DASHBOARD</div>
+      <div class="section-heading">Visão Geral</div>
+      <div class="section-desc">Performance consolidada da conta. Conecte sua Meta API para dados em tempo real.</div>
+
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="fetchOverviewData()">🔄 Atualizar da Meta API</button>
+        <button class="btn btn-ghost" onclick="loadOverviewSample()">↓ Dados de Exemplo</button>
+        <select id="overviewPreset" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:9px 12px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;">
+          <option value="last_7d">Últimos 7 dias</option>
+          <option value="last_14d">Últimos 14 dias</option>
+          <option value="last_30d">Últimos 30 dias</option>
+          <option value="today">Hoje</option>
+        </select>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div class="ov-kpi-grid" id="ovKpiGrid">
+        <div class="ov-kpi"><div class="ov-kpi-label">GASTO</div><div class="ov-kpi-val" id="ovSpend">—</div><div class="ov-kpi-change" id="ovSpendChg"></div></div>
+        <div class="ov-kpi"><div class="ov-kpi-label">RECEITA</div><div class="ov-kpi-val" id="ovRevenue">—</div><div class="ov-kpi-change" id="ovRevenueChg"></div></div>
+        <div class="ov-kpi"><div class="ov-kpi-label">ROAS</div><div class="ov-kpi-val accent" id="ovRoas">—</div><div class="ov-kpi-change" id="ovRoasChg"></div></div>
+        <div class="ov-kpi"><div class="ov-kpi-label">CONVERSÕES</div><div class="ov-kpi-val" id="ovConv">—</div><div class="ov-kpi-change" id="ovConvChg"></div></div>
+        <div class="ov-kpi"><div class="ov-kpi-label">CPA</div><div class="ov-kpi-val" id="ovCpa">—</div><div class="ov-kpi-change" id="ovCpaChg"></div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:16px;margin-bottom:16px;">
+        <!-- LINE CHART -->
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header"><div class="card-title">Desempenho</div>
+            <div style="display:flex;gap:16px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);">
+              <span style="display:flex;align-items:center;gap:5px;"><span style="width:16px;height:2px;background:var(--accent);display:inline-block;border-radius:1px;"></span>Receita</span>
+              <span style="display:flex;align-items:center;gap:5px;"><span style="width:16px;height:2px;background:var(--text3);display:inline-block;border-radius:1px;"></span>Gasto</span>
+            </div>
+          </div>
+          <div style="position:relative;height:200px;">
+            <canvas id="perfChart" style="width:100%;height:100%;"></canvas>
+          </div>
+        </div>
+        <!-- DONUT + DEVICES -->
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card" style="margin-bottom:0;flex:1">
+            <div class="card-header" style="margin-bottom:12px;padding-bottom:10px;"><div class="card-title">Canais</div></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+              <canvas id="donutChart" width="100" height="100"></canvas>
+              <div id="donutLegend" style="width:100%;font-size:11px;font-family:'IBM Plex Mono',monospace;display:flex;flex-direction:column;gap:5px;"></div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-header" style="margin-bottom:12px;padding-bottom:10px;"><div class="card-title">Dispositivos</div></div>
+            <div id="devicesChart" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMPAIGNS TABLE -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Campanhas</div></div>
+        <div style="overflow-x:auto;">
+          <table class="subid-table" id="ovCampsTable">
+            <thead><tr><th>Campanha</th><th>Status</th><th>Gasto</th><th>Receita</th><th>ROAS</th><th>CPA</th><th>Conversões</th></tr></thead>
+            <tbody id="ovCampsBody"><tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px;">Carregue dados para ver as campanhas</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: ANALYZE -->
+    <div id="panel-analyze" class="panel">
+      <div class="section-eyebrow">MÓDULO PRINCIPAL</div>
+      <div class="section-heading">Análise de Campanha</div>
+      <div class="section-desc">Preencha a estrutura, cole os dados. O Claude diagnostica a campanha, ranqueia criativos e gera briefs para o editor.</div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Estrutura da Campanha</div></div>
+        <div class="struct-grid">
+          <div class="field"><label>Tipo</label><select id="campType"><option value="ABO">ABO — Ad Set Budget</option><option value="CBO">CBO — Campaign Budget</option></select></div>
+          <div class="field"><label>Estratégia de Bid</label><select id="bidStrategy"><option value="lowest_cost">Lowest Cost (sem cap)</option><option value="bid_cap">Bid Cap</option><option value="cost_cap">Cost Cap</option></select></div>
+          <div class="field"><label>Objetivo</label><select id="campObjective"><option value="purchase">Purchase (Conversão)</option><option value="lead">Lead</option><option value="traffic">Tráfego</option></select></div>
+          <div class="field"><label>Dias Rodando</label><input type="number" id="daysRunning" value="7" min="1"></div>
+          <div class="field"><label>Fase de Aprendizado</label><select id="learningPhase"><option value="learning">Em aprendizado</option><option value="learning_limited">Aprendizado limitado</option><option value="active">Ativo (saiu do aprendizado)</option></select></div>
+          <div class="field"><label>Budget Diário Total ($)</label><input type="number" id="dailyBudget" placeholder="Ex: 150"></div>
+        </div>
+        <div class="grid-3">
+          <div class="field"><label>Bid/Cap ($) se aplicável</label><input type="number" id="bidCapVal" placeholder="Ex: 90"></div>
+          <div class="field"><label>Nº de Ad Sets ativos</label><input type="number" id="numAdsets" placeholder="Ex: 5"></div>
+          <div class="field"><label>Compras no Pixel (7d)</label><input type="number" id="pixelEvents" placeholder="Ex: 50"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Dados de Performance (Meta Ads)</div>
+          <button class="sample-btn" onclick="loadSample()">↓ Exemplo</button>
+        </div>
+
+        <!-- META API FETCH -->
+        <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:16px;margin-bottom:14px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1.5px;margin-bottom:14px;">CONECTAR META API</div>
+
+          <!-- STEP 1: TOKEN -->
+          <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap;">
+            <div class="field" style="flex:1;min-width:240px;">
+              <label>Meta Access Token</label>
+              <input type="password" id="metaToken" placeholder="EAAxxxxx..." autocomplete="off">
+            </div>
+            <button class="btn btn-primary" onclick="metaConnect()" id="metaConnectBtn">🔌 Conectar</button>
+            <div id="metaConnectStatus" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);align-self:center;"></div>
+          </div>
+
+          <!-- STEP 2: ACCOUNT + CAMPAIGN (hidden until connected) -->
+          <div id="metaSelectors" style="display:none;">
+            <div class="grid-2" style="margin-bottom:12px;">
+              <div class="field">
+                <label>Conta de Anúncios</label>
+                <select id="metaAccountSel" onchange="metaLoadCampaigns()">
+                  <option value="">Selecione a conta...</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Campanha</label>
+                <select id="metaCampaignSel" onchange="metaCampaignSelected()">
+                  <option value="">Selecione a campanha...</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2" style="margin-bottom:12px;">
+              <div class="field">
+                <label>Período</label>
+                <select id="metaPreset">
+                  <option value="last_7d">Últimos 7 dias</option>
+                  <option value="last_14d">Últimos 14 dias</option>
+                  <option value="last_30d">Últimos 30 dias</option>
+                  <option value="today">Hoje</option>
+                  <option value="yesterday">Ontem</option>
+                </select>
+              </div>
+              <div class="field" style="justify-content:flex-end;">
+                <label>&nbsp;</label>
+                <button class="btn btn-green" onclick="fetchMetaCreatives()" id="metaLoadBtn" disabled>⚡ Carregar Dados</button>
+              </div>
+            </div>
+            <!-- Campaign info strip -->
+            <div id="metaCampInfo" style="display:none;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:4px;display:flex;gap:20px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);"></div>
+          </div>
+
+          <div id="metaFetchStatus" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-top:8px;"></div>
+          <div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);line-height:1.6;">
+            Apenas leitura — não altera nada no BM. Precisa de token com <code>ads_read</code> + <code>read_insights</code>.
+          </div>
+        </div>
+
+        <!-- DATA PREVIEW TABLE -->
+        <div id="dataPreviewWrap" style="display:none;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1.5px;">DADOS CARREGADOS</div>
+            <button class="copy-btn" onclick="toggleRawData()">ver dados brutos</button>
+          </div>
+          <div style="overflow-x:auto;"><table class="subid-table" id="dataPreviewTable"></table></div>
+        </div>
+        <div id="rawDataWrap" style="display:none;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1.5px;">DADOS BRUTOS</div>
+            <button class="copy-btn" onclick="toggleRawData()">ver tabela</button>
+          </div>
+          <div class="field"><textarea id="campaignData" style="min-height:120px;"></textarea></div>
+        </div>
+        <div id="emptyDataWrap" style="margin-bottom:14px;">
+          <div class="field">
+            <label>Dados dos Criativos — preenchido automaticamente ou cole manualmente</label>
+            <textarea id="campaignDataEmpty" placeholder="Criativo | Gasto | Compras | CPA | ROAS | CTR | Frequência&#10;VD239 | $75.96 | 8 | $9.49 | 2.97x | 3.45% | 1.2" oninput="syncRawData(this.value)"></textarea>
+          </div>
+        </div>
+        <div class="grid-4" style="margin-bottom:14px;">
+          <div class="field"><label>CPA Aceitável ($)</label><input type="number" id="maxCPA" value="80"></div>
+          <div class="field"><label>CPA Limite — Pausar ($)</label><input type="number" id="limitCPA" value="120"></div>
+          <div class="field"><label>ROAS Mínimo</label><input type="number" id="minROAS" value="2.5" step="0.1"></div>
+          <div class="field"><label>Frequência Máx.</label><input type="number" id="maxFreq" value="3.5" step="0.1"></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="analyzeBtn" onclick="runAnalysis()">⚡ Analisar com Claude</button>
+          <button class="btn btn-ghost" onclick="clearAll()">✕ Limpar</button>
+        </div>
+      </div>
+      <div class="loading-overlay" id="loadingState"><div class="loader"></div><div class="loading-msg">Claude analisando sua campanha...</div><div class="loading-step" id="loadingStep">Processando métricas...</div></div>
+      <div id="analysisOutput">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Diagnóstico da Campanha</div><button class="copy-btn" onclick="copyEl('campDiagContent')">copiar</button></div><div id="campDiagContent"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Ranking de Criativos</div><button class="copy-btn" onclick="copyEl('rankingContent')">copiar</button></div><div id="rankingContent"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Plano de Ação</div><button class="copy-btn" onclick="copyEl('actionsContent')">copiar</button></div><div id="actionsContent"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Briefs para o Editor</div><button class="copy-btn" onclick="copyEl('briefsContent')">copiar</button></div><div id="briefsContent"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Redistribuição de Budget</div><button class="copy-btn" onclick="copyEl('budgetContent')">copiar</button></div><div id="budgetContent"></div></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;">
+          <button class="btn btn-primary" onclick="copyFullReport()">📋 Copiar Relatório Completo</button>
+          <button class="btn btn-ghost" onclick="clearAll()">Nova Análise</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: BUYGOODS -->
+    <div id="panel-buygoods" class="panel">
+      <div class="section-eyebrow">INTEGRAÇÃO</div>
+      <div class="section-heading">BuyGoods API</div>
+      <div class="section-desc">Conecte sua conta BuyGoods para cruzar vendas reais com a performance do Meta Ads por subID, dia e hora.</div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Credenciais BuyGoods</div></div>
+        <div class="grid-2" style="margin-bottom:14px;">
+          <div class="field"><label>API Key / Token BuyGoods</label><input type="password" id="bgApiKey" placeholder="Sua API key"></div>
+          <div class="field"><label>Afiliado ID</label><input type="text" id="bgAffId" placeholder="Seu ID de afiliado"></div>
+        </div>
+        <div class="grid-3" style="margin-bottom:14px;">
+          <div class="field"><label>Data Início</label><input type="date" id="bgDateFrom"></div>
+          <div class="field"><label>Data Fim</label><input type="date" id="bgDateTo"></div>
+          <div class="field"><label>Produto (opcional)</label><input type="text" id="bgProduct" placeholder="ID ou nome"></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-green" onclick="fetchBuyGoods()">🔌 Buscar Dados BuyGoods</button>
+          <button class="btn btn-ghost" onclick="loadBGSample()">↓ Dados de Exemplo</button>
+        </div>
+        <div style="margin-top:12px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:1px;">ENDPOINTS USADOS</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6;"><code>sales/by-day</code> · <code>sales/by-hour</code> · <code>sales/by-subid</code> · <code>commissions</code><br>SubIDs são cruzados com nomes de criativos do Meta para calcular CPA e ROAS reais por criativo.</div>
+        </div>
+      </div>
+      <div class="loading-overlay" id="bgLoading"><div class="loader"></div><div class="loading-msg">Buscando dados do BuyGoods...</div><div class="loading-step" id="bgLoadingStep">Conectando à API...</div></div>
+      <div id="bgOutput" style="display:none;">
+        <div class="bg-stats" id="bgStatsGrid"></div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Dados de Vendas</div>
+            <div class="inline-tabs">
+              <button class="inline-tab active" onclick="switchBGTab('subid',this)">Por SubID</button>
+              <button class="inline-tab" onclick="switchBGTab('day',this)">Por Dia</button>
+              <button class="inline-tab" onclick="switchBGTab('hour',this)">Por Hora</button>
+            </div>
+          </div>
+          <div id="bgSubidPanel"><table class="subid-table" id="subidTable"></table></div>
+          <div id="bgDayPanel" style="display:none;"><div class="bar-chart" id="dayChart"></div></div>
+          <div id="bgHourPanel" style="display:none;"><div class="bar-chart" id="hourChart"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Cruzamento BuyGoods × Meta Ads</div><button class="copy-btn" onclick="copyEl('crossContent')">copiar</button></div>
+          <div id="crossContent"><div style="font-size:13px;color:var(--text2);line-height:1.6;">Cole os dados do Meta Ads na aba <strong style="color:var(--accent)">Analisar Campanha</strong> e clique em Analisar para ver o cruzamento aqui.</div></div>
+        </div>
+        <button class="btn btn-green" onclick="runCrossAnalysis()" style="margin-top:4px;">🔬 Analisar Cruzamento com Claude</button>
+      </div>
+    </div>
+
+    <!-- PANEL: CONFIG -->
+    <div id="panel-config" class="panel">
+      <div class="section-eyebrow">CONFIGURAÇÃO</div>
+      <div class="section-heading">Setup</div>
+      <div class="section-desc">Configure sua API key e o perfil da operação.</div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">API Claude (Anthropic)</div></div>
+        <div class="steps" style="margin-bottom:20px;">
+          <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Crie conta em console.anthropic.com</div><div class="step-desc">Crie sua conta de desenvolvedor.</div></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Gere a API Key</div><div class="step-desc">API Keys → Create Key. Começa com <code>sk-ant-...</code></div></div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Cole abaixo e salve</div><div class="step-desc">Salvo localmente no navegador. Nunca enviado a terceiros.</div></div></div>
+        </div>
+        <div class="field" style="margin-bottom:14px;"><label>Anthropic API Key</label><input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off"></div>
+        <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar Configuração</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Perfil do Negócio</div></div>
+        <div class="grid-3" style="margin-bottom:14px;">
+          <div class="field"><label>Nicho</label><input type="text" id="cfgNiche" value="Suplemento para saúde da próstata"></div>
+          <div class="field"><label>Mercado</label><select id="cfgMarket"><option value="US">🇺🇸 Estados Unidos</option><option value="BR">🇧🇷 Brasil</option></select></div>
+          <div class="field"><label>Modelo</label><select id="cfgModel"><option value="affiliate">Afiliado</option><option value="proprio">Produto Próprio</option></select></div>
+          <div class="field"><label>Comissão por Venda ($)</label><input type="number" id="cfgCommission" value="200"></div>
+          <div class="field"><label>Rede de Afiliados</label><select id="cfgNetwork"><option value="buygoods">BuyGoods</option><option value="clickbank">ClickBank</option><option value="digistore">Digistore24</option></select></div>
+          <div class="field"><label>Ticket Médio ($)</label><input type="number" id="cfgTicket" value="99"></div>
+        </div>
+        <div class="field" style="margin-bottom:14px;"><label>Público-Alvo</label><input type="text" id="cfgAudience" value="Homens 45-70 anos, EUA, problemas de próstata"></div>
+        <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar</button>
+      </div>
+    </div>
+
+    <!-- PANEL: CODE -->
+    <div id="panel-code" class="panel">
+      <div class="section-eyebrow">AUTOMAÇÃO</div>
+      <div class="section-heading">Código Python</div>
+      <div class="section-desc">Script completo: busca Meta API + BuyGoods → analisa com Claude → salva relatório.</div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">meta_ads_analyzer.py</div><button class="copy-btn" onclick="copyCode()">copiar código</button></div>
+        <pre id="pythonCode" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:20px;overflow-x:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.9;color:#b8d4e8;white-space:pre-wrap;max-height:500px;overflow-y:auto;"></pre>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Como usar</div></div>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Instalar dependências</div><div class="step-desc"><code>pip install anthropic requests schedule python-dotenv</code></div></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Criar .env</div><div class="step-desc"><code>ANTHROPIC_API_KEY=sk-ant-...</code> <code>META_ACCESS_TOKEN=token</code> <code>META_AD_ACCOUNT=act_XXX</code> <code>BUYGOODS_API_KEY=key</code> <code>BUYGOODS_AFF_ID=id</code></div></div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Rodar</div><div class="step-desc"><code>python meta_ads_analyzer.py</code> — agenda toda segunda às 9h.</div></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- PANEL: HELP -->
+    <div id="panel-help" class="panel">
+      <div class="section-eyebrow">DOCUMENTAÇÃO</div>
+      <div class="section-heading">Guia de Uso</div>
+      <div class="section-desc">Explicação completa de cada campo, métrica e funcionalidade do AdBrain.</div>
+
+      <!-- VISÃO GERAL -->
+      <div class="help-section">
+        <div class="help-section-title"><span class="help-icon">📊</span> Visão Geral</div>
+        <div class="help-grid">
+          <div class="help-card">
+            <div class="help-field-name">Meta Access Token</div>
+            <div class="help-field-desc">Token de acesso à Meta API. Gere em <code>developers.facebook.com</code> → Ferramentas → Graph API Explorer → botão "Generate Access Token". Precisa das permissões <code>ads_read</code> e <code>read_insights</code>.</div>
+            <div class="help-tip">⚡ O token expira em 60 dias. Se parar de funcionar, gere um novo.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Ad Account ID</div>
+            <div class="help-field-desc">ID da sua conta de anúncios no formato <code>act_XXXXXXXXXX</code>. Encontre no Gerenciador de Anúncios — URL da página ou em Configurações da Conta.</div>
+            <div class="help-tip">⚡ Inclua o prefixo <code>act_</code> na hora de digitar.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Período (7d / 14d / 30d)</div>
+            <div class="help-field-desc">Janela de tempo dos dados. <strong>7 dias</strong> é o ideal para decisões de curto prazo. <strong>30 dias</strong> para padrões de sazonalidade. Evite períodos muito curtos (menos de 3 dias) — os dados ainda não estão estabilizados.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">ROAS (Return on Ad Spend)</div>
+            <div class="help-field-desc">Receita gerada dividida pelo gasto. ROAS 8 = para cada $1 gasto, $8 de receita. No nicho de suplementos DRC americano com comissão de $200, um ROAS de 2.5x já é lucrativo dependendo do seu CPA.</div>
+            <div class="help-tip">💡 ROAS alto com poucas conversões pode ser ilusório — veja o volume absoluto.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">CPA (Cost per Acquisition)</div>
+            <div class="help-field-desc">Quanto você pagou em anúncios por cada venda. Com comissão de $200, um CPA de $80 deixa $120 de lucro bruto. Abaixo de $80 = escalar. Acima de $120 = pausar imediatamente.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Conversões</div>
+            <div class="help-field-desc">Número de compras atribuídas pelo pixel da Meta. Pode diferir dos dados do BuyGoods por janelas de atribuição diferentes. A Meta usa <strong>7 dias após clique + 1 dia após visualização</strong> por padrão.</div>
+            <div class="help-tip">⚠ Compare sempre com os dados reais do BuyGoods na aba dedicada.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTRUTURA DE CAMPANHA -->
+      <div class="help-section">
+        <div class="help-section-title"><span class="help-icon">🏗️</span> Estrutura da Campanha</div>
+        <div class="help-grid">
+          <div class="help-card">
+            <div class="help-field-name">ABO vs CBO</div>
+            <div class="help-field-desc"><strong>ABO (Ad Set Budget Optimization)</strong> — você define o budget em cada ad set individualmente. Dá mais controle mas exige mais gestão.<br><br><strong>CBO (Campaign Budget Optimization)</strong> — a Meta distribui o budget entre os ad sets automaticamente. Ideal quando você tem ad sets testados e quer que o algoritmo maximize resultados.</div>
+            <div class="help-tip">💡 Para contas novas e testes: ABO. Para escalar criativos já validados: CBO.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Lowest Cost (sem cap)</div>
+            <div class="help-field-desc">A Meta busca as conversões mais baratas disponíveis sem limite de bid. Recomendado para contas em fase de aprendizado — permite que o algoritmo explore o leilão livremente.</div>
+            <div class="help-tip">⚡ Use isso para começar. Só adicione cap depois que a campanha sair do aprendizado.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Bid Cap</div>
+            <div class="help-field-desc">Limite máximo de quanto a Meta pode dar de lance em cada leilão. Controla o CPA de forma mais agressiva mas pode limitar o volume de entrega. Use um valor entre 1.5x e 2x o seu CPA alvo.</div>
+            <div class="help-tip">⚠ Bid Cap muito baixo pode paralisar a campanha — a Meta não consegue competir no leilão.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Cost Cap</div>
+            <div class="help-field-desc">Limite de custo médio por conversão (não por leilão como o Bid Cap). Mais flexível — a Meta pode dar lances maiores em alguns leilões desde que a média fique dentro do cap. Ideal para estabilizar CPA em campanhas maduras.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Dias Rodando</div>
+            <div class="help-field-desc">Quantos dias a campanha está ativa. Importante para contextualizar os dados — uma campanha com 2 dias e CPA alto pode ainda estar em aprendizado. Uma campanha com 30 dias e CPA alto está definitivamente underperformando.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Fase de Aprendizado</div>
+            <div class="help-field-desc"><strong>Em aprendizado</strong> — a Meta ainda está coletando dados (menos de ~50 eventos de otimização). Evite mudanças que resetam o aprendizado: editar público, criativo, budget acima de 20%, ou bid.<br><br><strong>Aprendizado limitado</strong> — a campanha não consegue sair do aprendizado por falta de volume. Considere consolidar ad sets ou aumentar budget.<br><br><strong>Ativo</strong> — saiu do aprendizado. Pode fazer otimizações normalmente.</div>
+            <div class="help-tip">⚡ Regra geral: 50+ eventos de compra em 7 dias para sair do aprendizado.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Budget Diário Total ($)</div>
+            <div class="help-field-desc">Soma do budget de todos os ad sets ativos (no ABO) ou budget da campanha (no CBO). O Claude usa esse dado para avaliar se o budget é suficiente para o número de ad sets ativos e para gerar eventos suficientes de otimização.</div>
+            <div class="help-tip">💡 Regra de bolso: mínimo de $10/dia por ad set para contas novas. Idealmente $20-30 por ad set para otimização com purchase.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Nº de Ad Sets Ativos</div>
+            <div class="help-field-desc">Quantidade de conjuntos de anúncios rodando simultaneamente. Muitos ad sets com budget baixo = nenhum sai do aprendizado. O ideal para contas menores é 3-5 ad sets bem orçados ao invés de 10 ad sets mal financiados.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Compras no Pixel (7d)</div>
+            <div class="help-field-desc">Número de eventos de compra registrados no pixel nos últimos 7 dias. A Meta precisa de pelo menos 50 eventos por semana para otimizar bem. Abaixo disso, a campanha fica instável.</div>
+            <div class="help-tip">⚠ Com menos de 20 compras/semana no pixel, considere mudar o evento de otimização para "Adicionar ao Carrinho" ou "Iniciar Checkout" até ganhar volume.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DADOS DE PERFORMANCE -->
+      <div class="help-section">
+        <div class="help-section-title"><span class="help-icon">📈</span> Dados de Performance (Meta Ads)</div>
+        <div class="help-grid">
+          <div class="help-card">
+            <div class="help-field-name">Como exportar do Meta Ads Manager</div>
+            <div class="help-field-desc">No Gerenciador de Anúncios, vá em nível de <strong>Anúncios</strong> → selecione o período → clique em "Colunas" → "Personalizar colunas" → adicione: Valor gasto, Compras, Custo por compra, ROAS, CTR, Frequência → clique em "Exportar" ou copie e cole direto na caixa de texto.</div>
+            <div class="help-tip">⚡ O formato aceito é bem flexível — basta ter os valores separados por <code>|</code> ou colunas do Excel/CSV.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">CTR (Click-Through Rate)</div>
+            <div class="help-field-desc">Percentual de pessoas que viram o anúncio e clicaram. Para o nicho de suplementos masculinos EUA, um CTR acima de 2% é bom. Abaixo de 1% indica que o hook/thumbnail não está chamando atenção suficiente.</div>
+            <div class="help-tip">💡 CTR alto + CPA alto = o hook funciona mas a landing page ou o produto não converte. CTR baixo + CPA baixo = criativo conservador mas eficiente com público aquecido.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Frequência</div>
+            <div class="help-field-desc">Quantas vezes em média cada pessoa viu seu anúncio. Acima de 3.5 o criativo entra em fadiga — as pessoas já viram demais e começam a ignorar ou se irritar. Acima de 5 é crítico.</div>
+            <div class="help-tip">⚠ Frequência alta + CTR caindo = hora de criar novos criativos ou expandir o público.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">CPP / CPM</div>
+            <div class="help-field-desc"><strong>CPP (Cost per Purchase)</strong> = quanto custou cada compra segundo a Meta. Pode diferir do CPA real do BuyGoods por diferenças de atribuição.<br><br><strong>CPM (Cost per Mille)</strong> = custo por 1.000 impressões. CPM alto pode indicar público muito concorrido ou anúncio com baixo relevance score.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">CPA Aceitável vs CPA Limite</div>
+            <div class="help-field-desc"><strong>CPA Aceitável</strong> — abaixo desse valor o criativo está performando bem e pode receber mais budget.<br><br><strong>CPA Limite</strong> — acima desse valor o criativo está no prejuízo e deve ser pausado imediatamente. Para comissão de $200: CPA aceitável até $80 deixa 60% de margem. CPA limite de $120 ainda dá $80 de lucro bruto.</div>
+            <div class="help-tip">💡 Ajuste esses valores conforme sua comissão real. Se sua comissão é $150, reduza os limites proporcionalmente.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">ROAS Mínimo</div>
+            <div class="help-field-desc">O ROAS mínimo que você aceita para manter um criativo ativo. Com comissão de $200 e ticket de $99, um ROAS de 2x significa que você está lucrando. Configure baseado na sua margem real: <code>ROAS mínimo = Ticket ÷ CPA máximo</code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BUYGOODS -->
+      <div class="help-section">
+        <div class="help-section-title"><span class="help-icon">💰</span> BuyGoods API</div>
+        <div class="help-grid">
+          <div class="help-card">
+            <div class="help-field-name">API Key BuyGoods</div>
+            <div class="help-field-desc">Token de acesso à API do BuyGoods. Acesse seu painel de afiliado em <code>buygoods.com</code> → Account Settings → API Access → Generate Key. A chave começa com <code>bg_</code> ou similar.</div>
+            <div class="help-tip">⚠ Nunca compartilhe sua API Key. Ela dá acesso completo aos seus dados de vendas.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Afiliado ID</div>
+            <div class="help-field-desc">Seu identificador único como afiliado no BuyGoods. Encontre no painel principal do BuyGoods — geralmente aparece como "Affiliate ID" ou "Username" no topo da página ou em Account Settings.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">SubID</div>
+            <div class="help-field-desc">Parâmetro de rastreamento que você adiciona no seu link de afiliado para identificar a origem do tráfego. No AdBrain, o SubID deve ser o <strong>nome do criativo</strong> (ex: VD239) para que os dados de vendas sejam cruzados automaticamente com o Meta Ads.</div>
+            <div class="help-tip">⚡ Formato do link: <code>seulink.com?subid=VD239</code> — o "VD239" deve ser idêntico ao nome do criativo no Meta.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">CPA Real vs CPA Meta</div>
+            <div class="help-field-desc">O CPA Real (BuyGoods) mostra o custo por venda baseado nas vendas reais confirmadas. O CPA da Meta inclui conversões atribuídas que podem não ter sido concluídas. <strong>Sempre tome decisões baseado no CPA Real do BuyGoods.</strong></div>
+            <div class="help-tip">💡 Discrepância grande entre os dois pode indicar problema de atribuição ou compras canceladas.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Vendas por Hora</div>
+            <div class="help-field-desc">Distribuição das vendas ao longo do dia. Use esse dado para configurar o <strong>Agendamento de Anúncios</strong> no Meta — ative anúncios apenas nos horários que mais convertem para reduzir desperdício de budget.</div>
+            <div class="help-tip">💡 Para o público americano (45-70 anos), os horários de pico costumam ser 8h-10h e 19h-21h EST.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Cruzamento BuyGoods × Meta</div>
+            <div class="help-field-desc">O botão "Analisar Cruzamento com Claude" envia os dados do BuyGoods para o Claude que identifica: discrepâncias de atribuição, criativos com bom CTR mas conversão ruim (problema de landing page), e os melhores horários para veicular. Carregue também os dados do Meta Ads para uma análise cruzada completa.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIGURAÇÃO -->
+      <div class="help-section">
+        <div class="help-section-title"><span class="help-icon">⚙️</span> Configuração</div>
+        <div class="help-grid">
+          <div class="help-card">
+            <div class="help-field-name">Anthropic API Key</div>
+            <div class="help-field-desc">Chave para usar o Claude como motor de análise. Acesse <code>console.anthropic.com</code> → API Keys → Create Key. A chave começa com <code>sk-ant-api03-</code>. Cada análise consome tokens — uma análise típica custa menos de $0.05.</div>
+            <div class="help-tip">⚡ A chave é salva localmente no seu navegador (localStorage). Não é enviada a nenhum servidor externo além da Anthropic.</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Comissão por Venda ($)</div>
+            <div class="help-field-desc">Valor que você recebe por cada venda como afiliado. Este valor é usado para calcular o ROAS real e o lucro por criativo. No BuyGoods, sua comissão aparece no painel como "Commission per Sale" ou "Earnings per Sale".</div>
+          </div>
+          <div class="help-card">
+            <div class="help-field-name">Nicho e Público-Alvo</div>
+            <div class="help-field-desc">Contexto que o Claude usa para gerar análises mais precisas. Quanto mais específico, melhor o diagnóstico. Exemplo: ao invés de "saúde masculina", use "suplemento para saúde da próstata, homens 45-70 anos, EUA".</div>
+            <div class="help-tip">💡 O Claude usa esse contexto para avaliar se o CTR e CPA são bons ou ruins para o seu nicho específico.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FLUXO RECOMENDADO -->
+      <div class="help-section">
+        <div class="help-section-title"><span class="help-icon">🚀</span> Fluxo de Uso Recomendado</div>
+        <div class="help-flow">
+          <div class="help-flow-step"><div class="help-flow-num">1</div><div class="help-flow-content"><div class="help-flow-title">Configurar uma vez</div><div class="help-flow-desc">Vá em Configuração, cole sua API Key do Claude, defina nicho, comissão e público. Salve.</div></div></div>
+          <div class="help-flow-arrow">↓</div>
+          <div class="help-flow-step"><div class="help-flow-num">2</div><div class="help-flow-content"><div class="help-flow-title">Segunda-feira: Visão Geral</div><div class="help-flow-desc">Abra a aba Visão Geral, clique em "Atualizar da Meta API" com seu token. Veja o panorama da semana anterior.</div></div></div>
+          <div class="help-flow-arrow">↓</div>
+          <div class="help-flow-step"><div class="help-flow-num">3</div><div class="help-flow-content"><div class="help-flow-title">Dados BuyGoods</div><div class="help-flow-desc">Acesse a aba BuyGoods API, busque os dados da semana. Veja vendas por SubID para identificar quais criativos realmente converteram.</div></div></div>
+          <div class="help-flow-arrow">↓</div>
+          <div class="help-flow-step"><div class="help-flow-num">4</div><div class="help-flow-content"><div class="help-flow-title">Análise Profunda</div><div class="help-flow-desc">Vá em Analisar Campanha. Preencha a estrutura (ABO/CBO, bid, fase de aprendizado). Cole os dados do Meta Ads. Clique em "Analisar com Claude".</div></div></div>
+          <div class="help-flow-arrow">↓</div>
+          <div class="help-flow-step"><div class="help-flow-num">5</div><div class="help-flow-content"><div class="help-flow-title">Executar o Plano</div><div class="help-flow-desc">Use o Ranking para escalar/pausar, o Plano de Ação para ajustes imediatos, e os Briefs para passar instruções para o editor de vídeo.</div></div></div>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</main>
+</div>
+<div class="notif" id="notif"></div>
+<script>
+let cfg={apiKey:localStorage.getItem('ab2_key')||'',niche:localStorage.getItem('ab2_niche')||'Suplemento para saúde da próstata',market:localStorage.getItem('ab2_market')||'US',commission:localStorage.getItem('ab2_commission')||'200',audience:localStorage.getItem('ab2_audience')||'Homens 45-70 anos, EUA, problemas de próstata',ticket:localStorage.getItem('ab2_ticket')||'99'};
+let bgData=null;
+const panelTitles={overview:'VISÃO GERAL',help:'AJUDA',analyze:'ANALISAR CAMPANHA',buygoods:'BUYGOODS API',config:'CONFIGURAÇÃO',code:'CÓDIGO PYTHON'};
+window.onload=()=>{
+  if(cfg.apiKey){document.getElementById('apiKey').value=cfg.apiKey;setApiStatus(true)}
+  const savedToken=localStorage.getItem('ab2_meta_token');
+  if(savedToken){document.getElementById('metaToken').value=savedToken}
+  document.getElementById('cfgNiche').value=cfg.niche;
+  document.getElementById('cfgCommission').value=cfg.commission;
+  document.getElementById('cfgAudience').value=cfg.audience;
+  document.getElementById('cfgTicket').value=cfg.ticket;
+  const t=new Date(),f=new Date(t);f.setDate(t.getDate()-7);
+  document.getElementById('bgDateTo').value=t.toISOString().split('T')[0];
+  document.getElementById('bgDateFrom').value=f.toISOString().split('T')[0];
+  renderPythonCode();
+};
+function setApiStatus(ok){const d=document.getElementById('apiStatusDot'),t=document.getElementById('apiStatusText');if(ok){d.classList.add('live');t.textContent='API conectada'}else{d.classList.remove('live');t.textContent='API não configurada'}}
+function showPanel(name,el){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('panel-'+name).classList.add('active');el.classList.add('active');document.getElementById('topbarSection').textContent=panelTitles[name]}
+function saveConfig(){const k=document.getElementById('apiKey').value.trim();if(k){localStorage.setItem('ab2_key',k);cfg.apiKey=k;setApiStatus(true)}const n=document.getElementById('cfgNiche').value.trim(),c=document.getElementById('cfgCommission').value.trim(),a=document.getElementById('cfgAudience').value.trim(),ti=document.getElementById('cfgTicket').value.trim();localStorage.setItem('ab2_niche',n);cfg.niche=n;localStorage.setItem('ab2_commission',c);cfg.commission=c;localStorage.setItem('ab2_audience',a);cfg.audience=a;localStorage.setItem('ab2_ticket',ti);cfg.ticket=ti;showNotif('✓ Configuração salva')}
+function loadSample(){document.getElementById('campaignData').value='Criativo | Gasto | Compras | CPP | ROAS | CTR | Frequência\nVD239 | $75.96 | 8 | $9.49 | 2.97x | 3.45% | 1.2\nVD169 | $558.33 | 30 | $18.61 | 1.39x | 6.88% | 2.1\nVD244 | $61.63 | 4 | $15.41 | 1.39x | 3.42% | 1.8\nVD141 | $5252.17 | 202 | $26.00 | 1.11x | 2.79% | 4.1\nVD189 | $282.38 | 9 | $31.38 | 0.87x | 2.75% | 2.3\nVD236 | $457.09 | 18 | $25.39 | 0.93x | 3.63% | 1.6\nVD240 | $83.76 | 2 | $41.88 | 0.51x | 4.28% | 1.1';document.getElementById('daysRunning').value='12';document.getElementById('dailyBudget').value='600';document.getElementById('numAdsets').value='5';document.getElementById('pixelEvents').value='273';renderDataPreview(document.getElementById('campaignDataEmpty').value);showNotif('✓ Dados de exemplo carregados')}
+function getCampaignStructure(){return{type:document.getElementById('campType').value,bidStrategy:document.getElementById('bidStrategy').value,objective:document.getElementById('campObjective').value,daysRunning:document.getElementById('daysRunning').value,learningPhase:document.getElementById('learningPhase').value,dailyBudget:document.getElementById('dailyBudget').value,bidCapVal:document.getElementById('bidCapVal').value,numAdsets:document.getElementById('numAdsets').value,pixelEvents:document.getElementById('pixelEvents').value}}
+async function runAnalysis(){
+  const data=document.getElementById('campaignData').value.trim();
+  const apiKey=localStorage.getItem('ab2_key')||document.getElementById('apiKey').value.trim();
+  if(!data){showNotif('⚠ Cole os dados da campanha');return}
+  if(!apiKey){showNotif('⚠ Configure sua API Key');return}
+  const maxCPA=parseFloat(document.getElementById('maxCPA').value)||80;
+  const limitCPA=parseFloat(document.getElementById('limitCPA').value)||120;
+  const minROAS=parseFloat(document.getElementById('minROAS').value)||2.5;
+  const maxFreq=parseFloat(document.getElementById('maxFreq').value)||3.5;
+  const s=getCampaignStructure();
+  document.getElementById('analyzeBtn').disabled=true;
+  document.getElementById('analysisOutput').style.display='none';
+  document.getElementById('loadingState').classList.add('show');
+  const steps=['Lendo estrutura da campanha...','Processando métricas...','Identificando padrões de ROAS e CPA...','Diagnosticando fase de aprendizado...','Gerando diagnóstico por criativo...','Criando briefs para o editor...','Montando redistribuição de budget...'];
+  let si=0;const iv=setInterval(()=>{if(si<steps.length)document.getElementById('loadingStep').textContent=steps[si++]},2000);
+  const learningLabel={learning:'EM APRENDIZADO — evitar mudanças bruscas',learning_limited:'APRENDIZADO LIMITADO — poucos eventos, considerar aumentar budget ou consolidar ad sets',active:'ATIVO — saiu do aprendizado, otimizações podem ser feitas normalmente'}[s.learningPhase];
+  let bgContext='';if(bgData){bgContext='\nDADOS BUYGOODS:\n'+JSON.stringify(bgData.bySubid||[]).slice(0,600)}
+  const prompt=`Você é gestor de tráfego sênior especializado em DRC no mercado americano, suplementos de saúde masculina.
+
+OPERAÇÃO:
+- Produto: ${cfg.niche} | Público: ${cfg.audience}
+- Comissão: $${cfg.commission} | Rede: BuyGoods | Mercado: EUA
+
+ESTRUTURA DA CAMPANHA:
+- Tipo: ${s.type} (${s.type==='ABO'?'budget no ad set':'budget na campanha'})
+- Bid: ${s.bidStrategy}${s.bidCapVal?' — cap: $'+s.bidCapVal:''}
+- Objetivo: ${s.objective} | Rodando há: ${s.daysRunning} dias
+- Fase: ${learningLabel}
+- Budget diário: ${s.dailyBudget?'$'+s.dailyBudget:'não informado'} | Ad Sets: ${s.numAdsets||'não informado'}
+- Compras no pixel (7d): ${s.pixelEvents||'não informado'}
+
+REGRAS:
+- CPA ok: até $${maxCPA} | CPA pausar: acima de $${limitCPA}
+- ROAS mínimo: ${minROAS}x | Frequência máx.: ${maxFreq}
+- CTR abaixo de 1%: hook fraco${bgContext}
+
+DADOS META ADS:
+${data}
+
+Retorne SOMENTE JSON válido sem markdown:
+
+{"campanha_diagnostico":{"status":"SAUDÁVEL|ATENÇÃO|CRÍTICO","fase_aprendizado_alerta":"string","principais_problemas":["string"],"pontos_positivos":["string"],"recomendacao_estrutura":"string"},"ranking":[{"criativo":"ID","status":"ESCALAR|MANTER|PAUSAR","roas":"val","cpp":"val","ctr":"val","frequencia":"val","diagnostico":"string"}],"acoes":[{"prioridade":1,"titulo":"string","descricao":"string","impacto":"ALTO|MÉDIO|BAIXO"}],"briefs":[{"criativo":"ID","tipo":"REPLICAR|AJUSTAR|NOVO","titulo":"string","instrucoes":"string detalhado","urgencia":"ALTA|NORMAL"}],"budget":{"resumo":"string","recomendacoes":[{"acao":"AUMENTAR|REDUZIR|MANTER|PAUSAR","conjunto":"string","percentual":"string","motivo":"string"}]}}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})});
+    clearInterval(iv);
+    const result=await res.json();
+    if(result.error)throw new Error(result.error.message);
+    renderOutput(result.content[0].text,maxCPA,limitCPA,minROAS);
+  }catch(err){clearInterval(iv);document.getElementById('loadingState').classList.remove('show');document.getElementById('analyzeBtn').disabled=false;showNotif('✕ Erro: '+err.message)}
+}
+function renderOutput(text,maxCPA,limitCPA,minROAS){
+  document.getElementById('loadingState').classList.remove('show');
+  document.getElementById('analyzeBtn').disabled=false;
+  let parsed;
+  try{parsed=JSON.parse(text.replace(/```json|```/g,'').trim())}catch(e){document.getElementById('rankingContent').innerHTML='<pre style="white-space:pre-wrap;font-size:11px;font-family:IBM Plex Mono,monospace;color:var(--text2);line-height:1.7">'+text+'</pre>';['campDiagContent','actionsContent','briefsContent','budgetContent'].forEach(id=>document.getElementById(id).innerHTML='');document.getElementById('analysisOutput').style.display='block';animateProg();return}
+  // DIAGNÓSTICO
+  const diag=parsed.campanha_diagnostico||{};
+  const sc={SAUDÁVEL:'green',ATENÇÃO:'yellow',CRÍTICO:'red'}[diag.status]||'accent';
+  let diagHtml=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><span class="badge badge-${sc}"><span class="badge-dot"></span>${diag.status||'—'}</span></div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:12px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1.5px;margin-bottom:8px;">APRENDIZADO / ESTRUTURA</div><div style="font-size:13px;color:var(--text2);line-height:1.6;">${diag.fase_aprendizado_alerta||'—'}</div></div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:12px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1.5px;margin-bottom:8px;">RECOMENDAÇÃO DE ESTRUTURA</div><div style="font-size:13px;color:var(--text2);line-height:1.6;">${diag.recomendacao_estrutura||'—'}</div></div>`;
+  if(diag.principais_problemas?.length){diagHtml+=`<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--red);letter-spacing:1.5px;margin-bottom:8px;">PROBLEMAS</div>`;diag.principais_problemas.forEach(p=>{diagHtml+=`<div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:var(--red);margin-top:2px;">▸</span><span style="font-size:13px;color:var(--text2)">${p}</span></div>`})}
+  if(diag.pontos_positivos?.length){diagHtml+=`<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);letter-spacing:1.5px;margin:12px 0 8px;">PONTOS POSITIVOS</div>`;diag.pontos_positivos.forEach(p=>{diagHtml+=`<div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:var(--green);margin-top:2px;">▸</span><span style="font-size:13px;color:var(--text2)">${p}</span></div>`})}
+  document.getElementById('campDiagContent').innerHTML=diagHtml;
+  // RANKING
+  let rankHtml='';
+  (parsed.ranking||[]).forEach((item,i)=>{
+    const sc2={ESCALAR:'badge-green',MANTER:'badge-yellow',PAUSAR:'badge-red'}[item.status]||'badge-accent';
+    const roas=parseFloat(item.roas)||0,cpp=parseFloat((item.cpp||'').replace(/[^0-9.]/g,''))||0,ctr=parseFloat((item.ctr||'').replace(/[^0-9.]/g,''))||0,freq=parseFloat((item.frequencia||'').replace(/[^0-9.]/g,''))||0;
+    rankHtml+=`<div class="creative-row"><div class="creative-rank">${i+1}</div><div><div class="creative-id">${item.criativo}</div><span class="badge ${sc2}" style="margin-top:4px"><span class="badge-dot"></span>${item.status}</span></div><div class="creative-diag">${item.diagnostico}</div><div class="metric-pills"><div class="metric-pill"><span class="pill-label">ROAS</span><span class="pill-val ${roas>=minROAS?'g':'r'}">${item.roas}</span></div><div class="metric-pill"><span class="pill-label">CPP</span><span class="pill-val ${cpp<=maxCPA?'g':cpp<=limitCPA?'y':'r'}">${item.cpp}</span></div><div class="metric-pill"><span class="pill-label">CTR</span><span class="pill-val ${ctr>=1?'g':'r'}">${item.ctr}</span></div>${freq>0?`<div class="metric-pill"><span class="pill-label">FREQ</span><span class="pill-val ${freq<=3.5?'g':'r'}">${item.frequencia}</span></div>`:''}</div></div>`;
+  });
+  document.getElementById('rankingContent').innerHTML=rankHtml||'<p style="color:var(--text2);font-size:13px">Sem dados.</p>';
+  // AÇÕES
+  let actHtml='';
+  (parsed.acoes||[]).forEach(a=>{const cls={ALTO:'high',MÉDIO:'medium',BAIXO:'low'}[a.impacto]||'low',bc={ALTO:'badge-red',MÉDIO:'badge-yellow',BAIXO:'badge-accent'}[a.impacto]||'badge-accent';actHtml+=`<div class="action-item ${cls}"><div class="action-header"><div class="action-title">${a.prioridade}. ${a.titulo}</div><span class="badge ${bc}">${a.impacto}</span></div><div class="action-desc">${a.descricao}</div></div>`});
+  document.getElementById('actionsContent').innerHTML=actHtml||'<p style="color:var(--text2);font-size:13px">Sem ações.</p>';
+  // BRIEFS
+  let briefHtml='';
+  (parsed.briefs||[]).forEach(b=>{const uc=b.urgencia==='ALTA'?'badge-red':'badge-yellow',tc={REPLICAR:'badge-green',AJUSTAR:'badge-yellow',NOVO:'badge-purple'}[b.tipo]||'badge-accent';briefHtml+=`<div class="brief-card"><div class="brief-header"><span class="brief-id">${b.criativo}</span><div style="display:flex;gap:8px;"><span class="badge ${tc}">${b.tipo}</span><span class="badge ${uc}">URGÊNCIA ${b.urgencia}</span></div></div><div class="brief-body"><div class="brief-title-text">${b.titulo}</div><div class="brief-instructions">${b.instrucoes}</div></div></div>`});
+  document.getElementById('briefsContent').innerHTML=briefHtml||'<p style="color:var(--text2);font-size:13px">Sem briefs.</p>';
+  // BUDGET
+  let budgetHtml='';
+  if(parsed.budget){budgetHtml+=`<div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;">${parsed.budget.resumo}</div>`;(parsed.budget.recomendacoes||[]).forEach(r=>{const c={AUMENTAR:'var(--green)',REDUZIR:'var(--red)',PAUSAR:'var(--red)',MANTER:'var(--yellow)'}[r.acao]||'var(--text2)';budgetHtml+=`<div class="budget-row"><div class="budget-pct" style="color:${c}">${r.percentual}</div><div class="budget-info"><div class="budget-name">${r.conjunto}</div><div class="budget-reason"><span style="color:${c};font-weight:700">${r.acao}</span> — ${r.motivo}</div></div></div>`})}
+  document.getElementById('budgetContent').innerHTML=budgetHtml||'<p style="color:var(--text2);font-size:13px">Sem recomendações.</p>';
+  document.getElementById('analysisOutput').style.display='block';
+  animateProg();showNotif('✓ Análise concluída!');
+}
+function animateProg(){setTimeout(()=>document.getElementById('progressFill').style.width='100%',100)}
+function clearAll(){document.getElementById('campaignData').value='';document.getElementById('analysisOutput').style.display='none';document.getElementById('progressFill').style.width='0%'}
+// BUYGOODS
+async function fetchBuyGoods(){
+  const apiKey=document.getElementById('bgApiKey').value.trim(),affId=document.getElementById('bgAffId').value.trim(),dateFrom=document.getElementById('bgDateFrom').value,dateTo=document.getElementById('bgDateTo').value;
+  if(!apiKey||!affId){showNotif('⚠ Preencha API Key e Afiliado ID');return}
+  document.getElementById('bgOutput').style.display='none';document.getElementById('bgLoading').classList.add('show');
+  const steps=['Conectando à API BuyGoods...','Buscando vendas por dia...','Buscando por hora...','Buscando por subID...','Buscando comissões...'];
+  let si=0;const iv=setInterval(()=>{if(si<steps.length)document.getElementById('bgLoadingStep').textContent=steps[si++]},1200);
+  try{
+    const base='https://www.buygoods.com/api/v2',headers={'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'};
+    const params=`?affiliate_id=${affId}&date_from=${dateFrom}&date_to=${dateTo}`;
+    const endpoints=['sales/by-day','sales/by-hour','sales/by-subid','commissions'];
+    const results={};
+    for(const ep of endpoints){try{const r=await fetch(`${base}/${ep}${params}`,{headers,mode:'cors'});results[ep.split('/').pop()]=r.ok?await r.json():null}catch{results[ep.split('/').pop()]=null}}
+    clearInterval(iv);
+    bgData={byDay:results['by-day'],byHour:results['by-hour'],bySubid:results['by-subid'],commissions:results['commissions']};
+    if(!bgData.byDay&&!bgData.bySubid)throw new Error('Não foi possível conectar. Verifique as credenciais.');
+    renderBGOutput(bgData);
+  }catch(err){clearInterval(iv);document.getElementById('bgLoading').classList.remove('show');showNotif('✕ Erro: '+err.message)}
+}
+function loadBGSample(){
+  bgData={byDay:[{date:'2025-04-29',sales:18,commissions:3600},{date:'2025-04-30',sales:22,commissions:4400},{date:'2025-05-01',sales:15,commissions:3000},{date:'2025-05-02',sales:31,commissions:6200},{date:'2025-05-03',sales:27,commissions:5400},{date:'2025-05-04',sales:19,commissions:3800},{date:'2025-05-05',sales:24,commissions:4800}],byHour:Array.from({length:24},(_,h)=>({hour:h,sales:Math.floor(Math.random()*6+(h>=9&&h<=21?3:0))})),bySubid:[{subid:'VD239',sales:14,commissions:2800,cpa:5.43},{subid:'VD169',sales:31,commissions:6200,cpa:18.01},{subid:'VD141',sales:89,commissions:17800,cpa:58.90},{subid:'VD244',sales:6,commissions:1200,cpa:10.27},{subid:'VD189',sales:4,commissions:800,cpa:70.60},{subid:'VD236',sales:8,commissions:1600,cpa:57.14},{subid:'VD240',sales:2,commissions:400,cpa:41.88}],commissions:{total:30800,pending:12400,paid:18400}};
+  renderBGOutput(bgData);showNotif('✓ Dados de exemplo BuyGoods carregados');
+}
+function renderBGOutput(data){
+  document.getElementById('bgLoading').classList.remove('show');
+  const totalSales=(data.byDay||[]).reduce((a,b)=>a+(b.sales||0),0);
+  const totalComm=data.commissions?.total||(data.byDay||[]).reduce((a,b)=>a+(b.commissions||0),0);
+  const avgCPA=data.bySubid?(data.bySubid.reduce((a,b)=>a+(b.cpa||0),0)/(data.bySubid.length||1)).toFixed(2):'—';
+  document.getElementById('bgStatsGrid').innerHTML=`<div class="bg-stat"><div class="bg-stat-label">Vendas no Período</div><div class="bg-stat-val">${totalSales}</div></div><div class="bg-stat"><div class="bg-stat-label">Comissões Totais</div><div class="bg-stat-val">$${totalComm.toLocaleString('en-US')}</div></div><div class="bg-stat"><div class="bg-stat-label">CPA Médio Real</div><div class="bg-stat-val">$${avgCPA}</div></div>`;
+  let subHtml='<thead><tr><th>SubID / Criativo</th><th>Vendas</th><th>Comissão</th><th>CPA Real</th></tr></thead><tbody>';
+  (data.bySubid||[]).forEach(r=>{const c=r.cpa<80?'var(--green)':r.cpa<120?'var(--yellow)':'var(--red)';subHtml+=`<tr><td style="color:var(--accent);font-weight:700">${r.subid}</td><td>${r.sales}</td><td style="color:var(--green)">$${(r.commissions||0).toFixed(0)}</td><td style="color:${c};font-weight:700">$${(r.cpa||0).toFixed(2)}</td></tr>`});
+  subHtml+='</tbody>';document.getElementById('subidTable').innerHTML=subHtml;
+  const maxD=Math.max(...(data.byDay||[{sales:1}]).map(d=>d.sales));
+  document.getElementById('dayChart').innerHTML=(data.byDay||[]).map(d=>`<div class="bar-row"><div class="bar-label">${d.date?.slice(5)||'—'}</div><div class="bar-track"><div class="bar-fill" style="width:${maxD>0?d.sales/maxD*100:0}%;background:var(--accent)"></div></div><div class="bar-val">${d.sales} vendas</div></div>`).join('');
+  const maxH=Math.max(...(data.byHour||[{sales:1}]).map(h=>h.sales));
+  document.getElementById('hourChart').innerHTML=(data.byHour||[]).map(h=>`<div class="bar-row"><div class="bar-label">${String(h.hour).padStart(2,'0')}h</div><div class="bar-track"><div class="bar-fill" style="width:${maxH>0?h.sales/maxH*100:0}%;background:var(--purple)"></div></div><div class="bar-val">${h.sales} vend.</div></div>`).join('');
+  document.getElementById('bgOutput').style.display='block';showNotif('✓ Dados BuyGoods carregados');
+}
+function switchBGTab(name,el){['subid','day','hour'].forEach(t=>{const p=document.getElementById('bg'+t.charAt(0).toUpperCase()+t.slice(1)+'Panel');if(p)p.style.display=t===name?'':'none'});document.querySelectorAll('.inline-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+async function runCrossAnalysis(){
+  if(!bgData){showNotif('⚠ Carregue os dados BuyGoods primeiro');return}
+  const apiKey=localStorage.getItem('ab2_key');if(!apiKey){showNotif('⚠ Configure sua API Key');return}
+  document.getElementById('crossContent').innerHTML='<div class="loading-overlay show" style="padding:30px"><div class="loader"></div><div class="loading-msg">Claude analisando cruzamento...</div></div>';
+  try{
+    const prompt=`Especialista em análise de dados de marketing direto. Analise esses dados BuyGoods:
+
+Vendas por SubID: ${JSON.stringify(bgData.bySubid||[])}
+Vendas por dia: ${JSON.stringify(bgData.byDay||[])}
+Vendas por hora: ${JSON.stringify(bgData.byHour||[])}
+
+Responda em português com:
+1. Quais criativos (SubIDs) têm melhor CPA real?
+2. Discrepâncias de atribuição Meta vs BuyGoods
+3. Melhores dias e horários para veicular anúncios
+4. Criativos com bom CTR no Meta mas CPA ruim no BuyGoods — possíveis causas`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const result=await res.json();if(result.error)throw new Error(result.error.message);
+    document.getElementById('crossContent').innerHTML=`<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;">${result.content[0].text}</div>`;
+    showNotif('✓ Cruzamento concluído');
+  }catch(err){document.getElementById('crossContent').innerHTML=`<p style="color:var(--red);font-size:13px">Erro: ${err.message}</p>`}
+}
+function copyEl(id){navigator.clipboard.writeText(document.getElementById(id).innerText);showNotif('✓ Copiado!')}
+function copyFullReport(){const ids=['campDiagContent','rankingContent','actionsContent','briefsContent','budgetContent'];navigator.clipboard.writeText(ids.map(id=>document.getElementById(id)?.innerText||'').join('\n\n---\n\n'));showNotif('✓ Relatório completo copiado!')}
+function copyCode(){navigator.clipboard.writeText(document.getElementById('pythonCode').textContent);showNotif('✓ Código copiado!')}
+function showNotif(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),2500)}
+function renderPythonCode(){document.getElementById('pythonCode').textContent=`import os, json, requests, schedule, time
+from datetime import datetime, timedelta
+import anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+
+CLAUDE_KEY = os.getenv("ANTHROPIC_API_KEY")
+META_TOKEN = os.getenv("META_ACCESS_TOKEN")
+AD_ACCOUNT = os.getenv("META_AD_ACCOUNT")   # act_XXXXXX
+BG_API_KEY = os.getenv("BUYGOODS_API_KEY")
+BG_AFF_ID  = os.getenv("BUYGOODS_AFF_ID")
+
+NICHE      = "Suplemento para saúde da próstata"
+AUDIENCE   = "Homens 45-70 anos, EUA"
+COMMISSION = 200
+MAX_CPA    = 80
+LIMIT_CPA  = 120
+MIN_ROAS   = 2.5
+
+def fetch_meta(preset="last_7d"):
+    r = requests.get(f"https://graph.facebook.com/v19.0/{AD_ACCOUNT}/ads", params={
+        "fields": "name,spend,impressions,clicks,actions,ctr,cpp,frequency",
+        "date_preset": preset, "access_token": META_TOKEN, "limit": 50
+    })
+    r.raise_for_status()
+    return r.json().get("data", [])
+
+def format_meta(ads):
+    lines = ["Criativo | Gasto | Compras | CPP | ROAS | CTR | Freq"]
+    for ad in ads:
+        spend = float(ad.get("spend", 0))
+        purchases = next((int(a["value"]) for a in (ad.get("actions") or [])
+                         if a["action_type"] == "purchase"), 0)
+        roas = (purchases * COMMISSION) / spend if spend > 0 else 0
+        lines.append(f"{ad['name']} | \${spend:.2f} | {purchases} | \${float(ad.get('cpp',0)):.2f} | {roas:.2f}x | {float(ad.get('ctr',0)):.2f}% | {float(ad.get('frequency',0)):.1f}")
+    return "\\n".join(lines)
+
+def fetch_buygoods(date_from, date_to):
+    base    = "https://www.buygoods.com/api/v2"
+    headers = {"Authorization": f"Bearer {BG_API_KEY}"}
+    params  = {"affiliate_id": BG_AFF_ID, "date_from": date_from, "date_to": date_to}
+    results = {}
+    for ep in ["sales/by-day", "sales/by-hour", "sales/by-subid", "commissions"]:
+        try:
+            r = requests.get(f"{base}/{ep}", headers=headers, params=params, timeout=10)
+            results[ep.split("/")[-1]] = r.json() if r.ok else None
+        except Exception as e:
+            results[ep.split("/")[-1]] = None
+    return results
+
+def analyze(meta_data, bg_data, struct=None):
+    client = anthropic.Anthropic(api_key=CLAUDE_KEY)
+    bg_ctx = f"\\nBUYGOODS SubID: {json.dumps(bg_data.get('by-subid') or [])[:600]}" if bg_data else ""
+    struct_ctx = ""
+    if struct:
+        struct_ctx = f"""
+ESTRUTURA: {struct.get('type','ABO')} | Bid: {struct.get('bid','lowest_cost')}
+Rodando: {struct.get('days','?')}d | Fase: {struct.get('phase','learning')}
+Budget/dia: \${struct.get('budget','?')} | Ad Sets: {struct.get('adsets','?')} | Pixel purchases: {struct.get('pixel_events','?')}"""
+    msg = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=4000,
+        messages=[{"role": "user", "content": f"""Gestor DRC no mercado americano, suplementos masculinos.
+OPERAÇÃO: {NICHE} | {AUDIENCE} | Comissão \${COMMISSION}
+CPA ok: \${MAX_CPA} | Pausar: \${LIMIT_CPA} | ROAS min: {MIN_ROAS}x{struct_ctx}
+META ADS:\\n{meta_data}{bg_ctx}
+Retorne JSON: campanha_diagnostico, ranking, acoes, briefs, budget."""}]
+    )
+    return json.loads(msg.content[0].text.replace("\`\`\`json","").replace("\`\`\`","").strip())
+
+def format_report(a):
+    d = a.get("campanha_diagnostico", {})
+    r = f"\\n{'='*50}\\nADBRAIN v2 — {datetime.now().strftime('%d/%m/%Y %H:%M')}\\n{'='*50}\\n"
+    r += f"\\nCAMPANHA: {d.get('status','—')}\\n{d.get('fase_aprendizado_alerta','—')}\\n"
+    r += f"ESTRUTURA: {d.get('recomendacao_estrutura','—')}\\n"
+    r += "\\n📊 RANKING\\n"
+    for i, c in enumerate(a.get("ranking", []), 1):
+        icon = "✅" if c["status"]=="ESCALAR" else "⏸️" if c["status"]=="PAUSAR" else "⚠️"
+        r += f"{i}. {icon} {c['criativo']} | ROAS {c['roas']} | CPP {c['cpp']} | {c['diagnostico']}\\n"
+    r += "\\n🎯 AÇÕES\\n"
+    for a2 in a.get("acoes", []):
+        r += f"\\n{a2['prioridade']}. [{a2['impacto']}] {a2['titulo']}\\n   {a2['descricao']}\\n"
+    return r
+
+def run():
+    print(f"\\n[{datetime.now()}] Iniciando análise...")
+    date_to   = datetime.now().strftime("%Y-%m-%d")
+    date_from = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    try:
+        meta_fmt = format_meta(fetch_meta("last_7d"))
+        bg       = fetch_buygoods(date_from, date_to)
+        analysis = analyze(meta_fmt, bg)
+        report   = format_report(analysis)
+        print(report)
+        with open(f"report_{datetime.now().strftime('%Y%m%d')}.txt", "w") as f:
+            f.write(report)
+        print("✓ Relatório salvo!")
+    except Exception as e:
+        print(f"✕ Erro: {e}")
+
+if __name__ == "__main__":
+    run()
+    schedule.every().monday.at("09:00").do(run)
+    while True:
+        schedule.run_pending()
+        time.sleep(60)`}
+
+// ===================== OVERVIEW =====================
+let ovChartData = null;
+let perfChartInst = null;
+
+function loadOverviewSample() {
+  const dates = ['08/05','09/05','10/05','11/05','12/05','13/05','14/05'];
+  const revenue = [92000,115000,108000,130000,145000,138000,195000];
+  const spend   = [11000,14000,13500,16000,18000,17000,24000];
+  ovChartData = {
+    kpis: { spend:184752, revenue:1482930, roas:8.03, conversions:4862, cpa:37.97,
+            spendChg:-4.2, revenueChg:8.3, roasChg:12.1, convChg:15.4, cpaChg:-6.3 },
+    chart: { dates, revenue, spend },
+    channels: [{label:'Meta',pct:62.1,color:'#00e5ff'},{label:'Google',pct:21.1,color:'#7a94a8'},{label:'YouTube',pct:8.8,color:'#445566'},{label:'Outros',pct:6.0,color:'#2a3d4f'}],
+    devices: [{label:'📱 Mobile',pct:71.4},{label:'🖥️ Desktop',pct:22.7},{label:'📟 Tablet',pct:4.9}],
+    campaigns: [
+      {name:'FUNIL ESCALA 6.0',status:'Ativa',spend:67281,revenue:543112,roas:8.60,cpa:31.17,conv:1742},
+      {name:'FUNIL LANÇAMENTO 02',status:'Ativa',spend:45589,revenue:371981,roas:8.10,cpa:28.32,conv:1216},
+      {name:'RETENÇÃO ALUNOS',status:'Ativa',spend:23112,revenue:181376,roas:7.85,cpa:28.21,conv:647},
+      {name:'COLD — LOOKALIKE',status:'Ativa',spend:31097,revenue:198604,roas:6.39,cpa:33.80,conv:502}
+    ]
+  };
+  renderOverview(ovChartData);
+  showNotif('✓ Dados de exemplo carregados');
+}
+
+async function fetchOverviewData() {
+  const token = localStorage.getItem('ab2_meta_token') || prompt('Meta Access Token:');
+  const account = localStorage.getItem('ab2_meta_account') || prompt('Ad Account ID (act_XXXXX):');
+  if (!token || !account) { showNotif('⚠ Token ou Account ID não informados'); return; }
+  localStorage.setItem('ab2_meta_token', token);
+  localStorage.setItem('ab2_meta_account', account);
+  const preset = document.getElementById('overviewPreset').value;
+  showNotif('🔄 Buscando dados da Meta API...');
+  try {
+    const fields = 'spend,impressions,clicks,actions,cost_per_action_type,ctr,cpm';
+    const url = `https://graph.facebook.com/v19.0/${account}/campaigns?fields=name,status,insights{${fields}}&date_preset=${preset}&access_token=${token}&limit=20`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const camps = (data.data || []).map(c => {
+      const ins = c.insights?.data?.[0] || {};
+      const spend = parseFloat(ins.spend || 0);
+      const purchases = (ins.actions || []).find(a => a.action_type === 'purchase');
+      const conv = parseInt(purchases?.value || 0);
+      const revenue = conv * parseFloat(cfg.commission);
+      const roas = spend > 0 ? revenue / spend : 0;
+      const cpa = conv > 0 ? spend / conv : 0;
+      return { name: c.name, status: c.status === 'ACTIVE' ? 'Ativa' : 'Pausada', spend, revenue, roas, cpa, conv };
+    });
+    const totSpend = camps.reduce((a,b)=>a+b.spend,0);
+    const totRev = camps.reduce((a,b)=>a+b.revenue,0);
+    const totConv = camps.reduce((a,b)=>a+b.conv,0);
+    ovChartData = {
+      kpis: { spend:totSpend, revenue:totRev, roas:totSpend>0?totRev/totSpend:0, conversions:totConv, cpa:totConv>0?totSpend/totConv:0, spendChg:0, revenueChg:0, roasChg:0, convChg:0, cpaChg:0 },
+      chart: { dates:[], revenue:[], spend:[] },
+      channels: [{label:'Meta',pct:100,color:'#00e5ff'}],
+      devices: [],
+      campaigns: camps
+    };
+    renderOverview(ovChartData);
+    showNotif('✓ Dados Meta carregados!');
+  } catch(err) { showNotif('✕ Erro Meta: ' + err.message); }
+}
+
+function renderOverview(d) {
+  const fmt = v => '$' + (v >= 1000000 ? (v/1000000).toFixed(2)+'M' : v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0));
+  const chg = (v, id) => {
+    const el = document.getElementById(id); if(!el) return;
+    const up = v > 0;
+    el.textContent = (up ? '↑ ' : '↓ ') + Math.abs(v).toFixed(1) + '%';
+    el.className = 'ov-kpi-change ' + (up ? 'up' : 'down');
+  };
+  const k = d.kpis;
+  document.getElementById('ovSpend').textContent = fmt(k.spend);
+  document.getElementById('ovRevenue').textContent = fmt(k.revenue);
+  document.getElementById('ovRoas').textContent = k.roas.toFixed(2);
+  document.getElementById('ovConv').textContent = k.conversions.toLocaleString('en-US');
+  document.getElementById('ovCpa').textContent = '$' + k.cpa.toFixed(2);
+  chg(k.spendChg,'ovSpendChg'); chg(k.revenueChg,'ovRevenueChg'); chg(k.roasChg,'ovRoasChg'); chg(k.convChg,'ovConvChg');
+  const cpaChgEl = document.getElementById('ovCpaChg');
+  if(cpaChgEl){ cpaChgEl.textContent = (k.cpaChg<0?'↓ ':'↑ ') + Math.abs(k.cpaChg).toFixed(1)+'%'; cpaChgEl.className='ov-kpi-change '+(k.cpaChg<0?'up':'down'); }
+
+  // LINE CHART via canvas
+  drawLineChart(d.chart);
+
+  // DONUT
+  drawDonut(d.channels);
+
+  // DEVICES
+  const devEl = document.getElementById('devicesChart');
+  devEl.innerHTML = d.devices.map(dv => `<div class="bar-row"><div class="bar-label" style="width:90px">${dv.label}</div><div class="bar-track"><div class="bar-fill" style="width:${dv.pct}%;background:var(--accent)"></div></div><div class="bar-val">${dv.pct}%</div></div>`).join('');
+
+  // CAMPAIGNS TABLE
+  const tbody = document.getElementById('ovCampsBody');
+  tbody.innerHTML = d.campaigns.map(c => {
+    const rc = c.roas >= 3 ? 'var(--green)' : c.roas >= 2 ? 'var(--yellow)' : 'var(--red)';
+    const cc = c.cpa <= 80 ? 'var(--green)' : c.cpa <= 120 ? 'var(--yellow)' : 'var(--red)';
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)">${c.name}</td>
+      <td><span class="badge badge-green"><span class="badge-dot"></span>${c.status}</span></td>
+      <td>$${(c.spend).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td style="color:var(--green)">$${(c.revenue).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td style="color:${rc};font-weight:700;font-family:'IBM Plex Mono',monospace">${c.roas.toFixed(2)}</td>
+      <td style="color:${cc};font-family:'IBM Plex Mono',monospace">$${c.cpa.toFixed(2)}</td>
+      <td style="font-family:'IBM Plex Mono',monospace">${c.conv.toLocaleString('en-US')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function drawLineChart(data) {
+  const canvas = document.getElementById('perfChart');
+  if (!canvas || !data.dates || !data.dates.length) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr; canvas.height = 200 * dpr;
+  canvas.style.width = rect.width + 'px'; canvas.style.height = '200px';
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = 200;
+  const pad = { top:20, right:16, bottom:36, left:52 };
+  const cW = W - pad.left - pad.right, cH = H - pad.top - pad.bottom;
+  ctx.clearRect(0,0,W,H);
+  const allVals = [...data.revenue, ...data.spend];
+  const maxV = Math.max(...allVals) * 1.1;
+  const n = data.dates.length;
+  const xPos = i => pad.left + (i / (n-1)) * cW;
+  const yPos = v => pad.top + cH - (v / maxV) * cH;
+  // Grid lines
+  ctx.strokeStyle = 'rgba(31,45,58,0.8)'; ctx.lineWidth = 1;
+  [0,0.25,0.5,0.75,1].forEach(t => {
+    const y = pad.top + t * cH;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke();
+    const val = maxV * (1 - t);
+    ctx.fillStyle = '#445566'; ctx.font = '10px IBM Plex Mono, monospace'; ctx.textAlign = 'right';
+    ctx.fillText(val >= 1000 ? (val/1000).toFixed(0)+'K' : val.toFixed(0), pad.left - 6, y + 4);
+  });
+  // X labels
+  ctx.fillStyle = '#445566'; ctx.font = '10px IBM Plex Mono, monospace'; ctx.textAlign = 'center';
+  data.dates.forEach((d,i) => ctx.fillText(d, xPos(i), H - 8));
+  // Draw line helper
+  const drawLine = (vals, color, gTop, gBot) => {
+    ctx.beginPath();
+    vals.forEach((v,i) => i === 0 ? ctx.moveTo(xPos(i), yPos(v)) : ctx.lineTo(xPos(i), yPos(v)));
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+    grad.addColorStop(0, gTop); grad.addColorStop(1, gBot);
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.lineTo(xPos(vals.length-1), pad.top + cH); ctx.lineTo(xPos(0), pad.top + cH); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    vals.forEach((v,i) => { ctx.beginPath(); ctx.arc(xPos(i), yPos(v), 3, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill(); });
+  };
+  drawLine(data.revenue, '#00e5ff', 'rgba(0,229,255,0.15)', 'rgba(0,229,255,0)');
+  drawLine(data.spend, '#445566', 'rgba(68,85,102,0.1)', 'rgba(68,85,102,0)');
+}
+
+function drawDonut(channels) {
+  const canvas = document.getElementById('donutChart');
+  if (!canvas) return;
+  canvas.width = 100; canvas.height = 100;
+  const ctx = canvas.getContext('2d');
+  const cx = 50, cy = 50, r = 38, inner = 24;
+  let start = -Math.PI / 2;
+  channels.forEach(ch => {
+    const angle = (ch.pct / 100) * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start + angle);
+    ctx.closePath(); ctx.fillStyle = ch.color; ctx.fill();
+    start += angle;
+  });
+  ctx.beginPath(); ctx.arc(cx, cy, inner, 0, Math.PI * 2);
+  ctx.fillStyle = '#0e1318'; ctx.fill();
+  const leg = document.getElementById('donutLegend');
+  leg.innerHTML = channels.map(ch => `<div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:${ch.color};display:inline-block;flex-shrink:0"></span><span style="color:var(--text2)">${ch.label}</span></div><span style="color:var(--text)">${ch.pct}%</span></div>`).join('');
+}
+
+// ===================== META API — CONNECT + SELECT + FETCH =====================
+let metaToken = '';
+let metaAccounts = [];
+let metaCampaigns = [];
+
+async function metaConnect() {
+  const tokenInput = document.getElementById('metaToken').value.trim();
+  if (!tokenInput) { showNotif('⚠ Cole seu Meta Access Token'); return; }
+  metaToken = tokenInput;
+  localStorage.setItem('ab2_meta_token', metaToken);
+
+  const btn = document.getElementById('metaConnectBtn');
+  const status = document.getElementById('metaConnectStatus');
+  btn.disabled = true; btn.textContent = '⏳ Conectando...';
+  status.textContent = ''; status.style.color = 'var(--text3)';
+
+  try {
+    // Fetch all ad accounts the token has access to
+    const url = 'https://graph.facebook.com/v19.0/me/adaccounts?fields=name,account_id,currency,account_status&limit=50&access_token=' + metaToken;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    metaAccounts = data.data || [];
+    if (!metaAccounts.length) throw new Error('Nenhuma conta de anúncios encontrada para esse token.');
+
+    // Populate account selector
+    const sel = document.getElementById('metaAccountSel');
+    sel.innerHTML = '<option value="">Selecione a conta...</option>';
+    metaAccounts.forEach(acc => {
+      const opt = document.createElement('option');
+      opt.value = acc.id;
+      opt.textContent = acc.name + ' (' + acc.id + ')';
+      sel.appendChild(opt);
+    });
+
+    // If only one account, auto-select it
+    if (metaAccounts.length === 1) {
+      sel.value = metaAccounts[0].id;
+      metaLoadCampaigns();
+    }
+
+    document.getElementById('metaSelectors').style.display = 'block';
+    status.textContent = '✓ ' + metaAccounts.length + ' conta(s) encontrada(s)';
+    status.style.color = 'var(--green)';
+    btn.textContent = '✓ Conectado';
+    setApiStatus(true);
+    showNotif('✓ Meta conectada — selecione a conta');
+
+  } catch(err) {
+    status.textContent = '✕ ' + err.message;
+    status.style.color = 'var(--red)';
+    btn.disabled = false; btn.textContent = '🔌 Conectar';
+    showNotif('✕ ' + err.message);
+  }
+}
+
+async function metaLoadCampaigns() {
+  const accountId = document.getElementById('metaAccountSel').value;
+  if (!accountId) return;
+  localStorage.setItem('ab2_meta_account', accountId);
+
+  const campSel = document.getElementById('metaCampaignSel');
+  campSel.innerHTML = '<option value="">Carregando campanhas...</option>';
+  document.getElementById('metaLoadBtn').disabled = true;
+  document.getElementById('metaCampInfo').style.display = 'none';
+
+  try {
+    const fields = 'name,status,objective,buying_type,daily_budget,lifetime_budget,created_time,bid_strategy';
+    const url = 'https://graph.facebook.com/v19.0/' + accountId + '/campaigns?fields=' + fields + '&limit=50&access_token=' + metaToken;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    metaCampaigns = (data.data || []).filter(c => c.status !== 'DELETED');
+    campSel.innerHTML = '<option value="">Selecione a campanha...</option>';
+    metaCampaigns.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      const status = c.status === 'ACTIVE' ? '🟢' : '⏸️';
+      opt.textContent = status + ' ' + c.name;
+      campSel.appendChild(opt);
+    });
+
+    showNotif('✓ ' + metaCampaigns.length + ' campanhas carregadas');
+  } catch(err) {
+    campSel.innerHTML = '<option value="">Erro ao carregar campanhas</option>';
+    showNotif('✕ ' + err.message);
+  }
+}
+
+function metaCampaignSelected() {
+  const campId = document.getElementById('metaCampaignSel').value;
+  if (!campId) { document.getElementById('metaLoadBtn').disabled = true; return; }
+
+  const camp = metaCampaigns.find(c => c.id === campId);
+  if (!camp) return;
+
+  // Show campaign info strip
+  const info = document.getElementById('metaCampInfo');
+  const budget = camp.daily_budget ? '$' + (parseFloat(camp.daily_budget)/100).toFixed(0) + '/dia' : camp.lifetime_budget ? '$' + (parseFloat(camp.lifetime_budget)/100).toFixed(0) + ' total' : '—';
+  const isCBO = camp.buying_type === 'AUCTION' && camp.daily_budget;
+  const daysRunning = camp.created_time ? Math.floor((Date.now() - new Date(camp.created_time)) / 86400000) : '?';
+  const bidLabel = {LOWEST_COST_WITHOUT_CAP:'Lowest Cost',LOWEST_COST_WITH_BID_CAP:'Bid Cap',COST_CAP:'Cost Cap',LOWEST_COST_WITH_MIN_ROAS:'Min ROAS'}[camp.bid_strategy] || camp.bid_strategy || '—';
+
+  info.innerHTML =
+    '<span><span style="color:var(--text3)">TIPO</span> <span style="color:var(--accent);margin-left:4px">' + (isCBO ? 'CBO' : 'ABO') + '</span></span>' +
+    '<span><span style="color:var(--text3)">BID</span> <span style="color:var(--accent);margin-left:4px">' + bidLabel + '</span></span>' +
+    '<span><span style="color:var(--text3)">BUDGET</span> <span style="color:var(--accent);margin-left:4px">' + budget + '</span></span>' +
+    '<span><span style="color:var(--text3)">DIAS</span> <span style="color:var(--accent);margin-left:4px">' + daysRunning + '</span></span>' +
+    '<span><span style="color:var(--text3)">OBJETIVO</span> <span style="color:var(--accent);margin-left:4px">' + (camp.objective || '—') + '</span></span>';
+  info.style.display = 'flex';
+
+  // Auto-fill structure fields
+  if (camp.daily_budget) document.getElementById('dailyBudget').value = (parseFloat(camp.daily_budget)/100).toFixed(0);
+  if (daysRunning && daysRunning !== '?') document.getElementById('daysRunning').value = daysRunning;
+  if (isCBO) document.getElementById('campType').value = 'CBO';
+  if (camp.bid_strategy === 'LOWEST_COST_WITH_BID_CAP') document.getElementById('bidStrategy').value = 'bid_cap';
+  else if (camp.bid_strategy === 'COST_CAP') document.getElementById('bidStrategy').value = 'cost_cap';
+  else document.getElementById('bidStrategy').value = 'lowest_cost';
+
+  document.getElementById('metaLoadBtn').disabled = false;
+}
+
+async function fetchMetaCreatives() {
+  const accountId = document.getElementById('metaAccountSel').value || localStorage.getItem('ab2_meta_account');
+  const campId = document.getElementById('metaCampaignSel').value;
+  const preset = document.getElementById('metaPreset').value;
+  const status = document.getElementById('metaFetchStatus');
+  const commission = parseFloat(cfg.commission) || 200;
+
+  if (!metaToken) { showNotif('⚠ Conecte o token primeiro'); return; }
+  if (!accountId) { showNotif('⚠ Selecione a conta de anúncios'); return; }
+
+  document.getElementById('metaLoadBtn').disabled = true;
+  status.textContent = '⏳ Buscando anúncios...';
+  status.style.color = 'var(--accent)';
+
+  try {
+    // Build URL — filter by campaign if selected
+    const insightFields = 'spend,impressions,clicks,ctr,cpm,cpp,frequency,actions,cost_per_action_type,video_30_sec_watched_actions,video_p50_watched_actions,video_p75_watched_actions';
+    const adFields = 'name,status,insights.date_preset(' + preset + '){' + insightFields + '}';
+
+    let url;
+    if (campId) {
+      // Get ads for specific campaign via adsets
+      url = 'https://graph.facebook.com/v19.0/' + campId + '/ads?fields=' + encodeURIComponent(adFields) + '&limit=100&access_token=' + metaToken;
+    } else {
+      url = 'https://graph.facebook.com/v19.0/' + accountId + '/ads?fields=' + encodeURIComponent(adFields) + '&limit=100&access_token=' + metaToken;
+    }
+
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const ads = data.data || [];
+    if (!ads.length) throw new Error('Nenhum anúncio encontrado nessa campanha/período.');
+
+    status.textContent = '⏳ Processando ' + ads.length + ' anúncios...';
+
+    let totalSpend = 0;
+    let totalPurchases = 0;
+    const lines = ['Criativo | Status | Gasto | Compras | CPA | ROAS | CTR | Frequência | Impressões'];
+
+    for (const ad of ads) {
+      const ins = ad.insights?.data?.[0];
+      const statusLabel = ad.status === 'ACTIVE' ? 'Ativo' : 'Pausado';
+      if (!ins) {
+        lines.push(ad.name + ' | ' + statusLabel + ' | $0.00 | 0 | $0.00 | 0.00x | 0.00% | 0.0 | 0');
+        continue;
+      }
+
+      const spend = parseFloat(ins.spend || 0);
+      totalSpend += spend;
+      const impressions = parseInt(ins.impressions || 0);
+      const ctr = parseFloat(ins.ctr || 0);
+      const cpp = parseFloat(ins.cpp || 0);
+      const freq = parseFloat(ins.frequency || 0);
+
+      const actions = ins.actions || [];
+      const purchases = parseInt(
+        (actions.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase') || {}).value || 0
+      );
+      totalPurchases += purchases;
+
+      const roas = spend > 0 && purchases > 0 ? (purchases * commission) / spend : 0;
+      const cpaReal = purchases > 0 ? spend / purchases : 0;
+
+      lines.push(ad.name + ' | ' + statusLabel + ' | $' + spend.toFixed(2) + ' | ' + purchases + ' | $' + (cpaReal > 0 ? cpaReal.toFixed(2) : cpp.toFixed(2)) + ' | ' + roas.toFixed(2) + 'x | ' + ctr.toFixed(2) + '% | ' + freq.toFixed(1) + ' | ' + impressions);
+    }
+
+    renderDataPreview(lines.join('\n'));
+    document.getElementById('pixelEvents').value = totalPurchases;
+    document.getElementById('numAdsets').value = ads.filter(a => a.status === 'ACTIVE').length;
+
+    status.textContent = '✓ ' + ads.length + ' anúncios carregados — Gasto: $' + totalSpend.toFixed(2) + ' — Compras: ' + totalPurchases;
+    status.style.color = 'var(--green)';
+    document.getElementById('metaLoadBtn').disabled = false;
+    showNotif('✓ ' + ads.length + ' criativos carregados!');
+    document.getElementById('campaignData').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  } catch(err) {
+    status.textContent = '✕ ' + err.message;
+    status.style.color = 'var(--red)';
+    document.getElementById('metaLoadBtn').disabled = false;
+    showNotif('✕ ' + err.message);
+  }
+}
+
+// ===================== DATA PREVIEW TABLE =====================
+let rawDataValue = '';
+
+function syncRawData(val) {
+  rawDataValue = val;
+  // sync to hidden textarea too
+  const hidden = document.getElementById('campaignData');
+  if (hidden) hidden.value = val;
+}
+
+function getCampaignData() {
+  // Return from whichever source has data
+  const empty = document.getElementById('campaignDataEmpty');
+  const raw = document.getElementById('campaignData');
+  return (raw && raw.value.trim()) || (empty && empty.value.trim()) || rawDataValue;
+}
+
+function toggleRawData() {
+  const preview = document.getElementById('dataPreviewWrap');
+  const rawWrap = document.getElementById('rawDataWrap');
+  if (rawWrap.style.display === 'none') {
+    rawWrap.style.display = 'block';
+    preview.style.display = 'none';
+  } else {
+    rawWrap.style.display = 'none';
+    preview.style.display = 'block';
+  }
+}
+
+function renderDataPreview(csvText) {
+  const lines = csvText.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return;
+
+  const headers = lines[0].split('|').map(h => h.trim());
+  const rows = lines.slice(1);
+
+  // Find column indices
+  const idx = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+  const iName = 0;
+  const iStatus = idx('status');
+  const iGasto = idx('gasto') >= 0 ? idx('gasto') : idx('spend');
+  const iCompras = idx('compras') >= 0 ? idx('compras') : idx('purchase');
+  const iCPA = idx('cpa') >= 0 ? idx('cpa') : idx('cpp');
+  const iROAS = idx('roas');
+  const iCTR = idx('ctr');
+  const iFreq = idx('freq') >= 0 ? idx('freq') : idx('frequê');
+  const iImp = idx('impres');
+
+  const maxCPA = parseFloat(document.getElementById('limitCPA')?.value) || 120;
+  const okCPA = parseFloat(document.getElementById('maxCPA')?.value) || 80;
+  const minROAS = parseFloat(document.getElementById('minROAS')?.value) || 2.5;
+
+  let thead = '<thead><tr>';
+  const visibleCols = [
+    {label:'Criativo'}, {label:'Status'}, {label:'Gasto'}, {label:'Compras'},
+    {label:'CPA'}, {label:'ROAS'}, {label:'CTR'}, {label:'Freq.'}, {label:'Impressões'}
+  ];
+  visibleCols.forEach(c => {
+    thead += '<th>' + c.label + '</th>';
+  });
+  thead += '</tr></thead>';
+
+  let tbody = '<tbody>';
+  rows.forEach(row => {
+    const cells = row.split('|').map(c => c.trim());
+    const get = (i) => i >= 0 && i < cells.length ? cells[i] : '—';
+
+    const name = get(iName);
+    const status = get(iStatus);
+    const gasto = get(iGasto);
+    const compras = get(iCompras);
+    const cpa = get(iCPA);
+    const roas = get(iROAS);
+    const ctr = get(iCTR);
+    const freq = get(iFreq);
+    const imp = iImp >= 0 ? get(iImp) : '—';
+
+    const cpaNum = parseFloat(cpa.replace(/[^0-9.]/g,'')) || 0;
+    const roasNum = parseFloat(roas.replace(/[^0-9.]/g,'')) || 0;
+    const ctrNum = parseFloat(ctr.replace(/[^0-9.]/g,'')) || 0;
+    const freqNum = parseFloat(freq.replace(/[^0-9.]/g,'')) || 0;
+    const comprasNum = parseInt(compras) || 0;
+
+    const cpaClass = comprasNum === 0 ? 'td-n' : cpaNum <= okCPA ? 'td-g' : cpaNum <= maxCPA ? 'td-y' : 'td-r';
+    const roasClass = comprasNum === 0 ? 'td-n' : roasNum >= minROAS ? 'td-g' : roasNum >= minROAS * 0.7 ? 'td-y' : 'td-r';
+    const ctrClass = ctrNum >= 2 ? 'td-g' : ctrNum >= 1 ? 'td-y' : ctrNum > 0 ? 'td-r' : 'td-n';
+    const freqClass = freqNum === 0 ? 'td-n' : freqNum <= 3.5 ? 'td-g' : 'td-r';
+    const statusHtml = status.toLowerCase().includes('ativ') || status.toLowerCase().includes('active')
+      ? '<span class="td-status-a">● ATIVO</span>'
+      : '<span class="td-status-p">● PAUSADO</span>';
+
+    tbody += '<tr>' +
+      '<td class="td-name">' + name + '</td>' +
+      '<td>' + statusHtml + '</td>' +
+      '<td class="td-n">' + gasto + '</td>' +
+      '<td class="td-n" style="text-align:center">' + compras + '</td>' +
+      '<td class="' + cpaClass + '">' + (comprasNum === 0 ? '—' : cpa) + '</td>' +
+      '<td class="' + roasClass + '">' + (comprasNum === 0 ? '—' : roas) + '</td>' +
+      '<td class="' + ctrClass + '">' + ctr + '</td>' +
+      '<td class="' + freqClass + '">' + freq + '</td>' +
+      '<td class="td-n">' + imp + '</td>' +
+    '</tr>';
+  });
+  tbody += '</tbody>';
+
+  document.getElementById('dataPreviewTable').innerHTML = thead + tbody;
+  document.getElementById('emptyDataWrap').style.display = 'none';
+  document.getElementById('dataPreviewWrap').style.display = 'block';
+  document.getElementById('rawDataWrap').style.display = 'none';
+
+  // Keep hidden textarea in sync
+  const hidden = document.getElementById('campaignData');
+  if (hidden) hidden.value = csvText;
+  rawDataValue = csvText;
+}
+</script>
+</body>
+</html>
