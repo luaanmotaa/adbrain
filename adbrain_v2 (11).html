@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdBrain v3 — Meta Ads AI Analyzer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f1;color:#1a1a1a;min-height:100vh}
+@media(prefers-color-scheme:dark){body{background:#1a1a1a;color:#e8e8e0}}
+
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:210px;min-height:100vh;background:#fff;border-right:0.5px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+@media(prefers-color-scheme:dark){.sidebar{background:#111;border-color:rgba(255,255,255,0.08)}}
+.sb-logo{padding:18px 16px 14px;border-bottom:0.5px solid rgba(0,0,0,0.08)}
+@media(prefers-color-scheme:dark){.sb-logo{border-color:rgba(255,255,255,0.08)}}
+.sb-logo-name{font-size:15px;font-weight:500;color:#1a1a1a;letter-spacing:0.3px}
+@media(prefers-color-scheme:dark){.sb-logo-name{color:#e8e8e0}}
+.sb-logo-sub{font-size:10px;color:#999;font-family:monospace;margin-top:2px;letter-spacing:1px}
+.sb-nav{padding:8px;flex:1}
+.sb-sec{font-size:10px;color:#aaa;font-family:monospace;padding:10px 8px 4px;letter-spacing:1.5px;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:13px;color:#666;cursor:pointer;margin-bottom:1px;border:0.5px solid transparent;transition:all 0.1s}
+@media(prefers-color-scheme:dark){.sb-item{color:#888}}
+.sb-item:hover{background:#f5f4f1;color:#1a1a1a}
+@media(prefers-color-scheme:dark){.sb-item:hover{background:#222;color:#e8e8e0}}
+.sb-item.active{background:#fff;color:#1a1a1a;border-color:rgba(0,0,0,0.1);font-weight:500}
+@media(prefers-color-scheme:dark){.sb-item.active{background:#222;color:#e8e8e0;border-color:rgba(255,255,255,0.1)}}
+.sb-item i{font-size:15px}
+.sb-foot{padding:12px 16px;border-top:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;gap:6px;font-size:11px;color:#aaa;font-family:monospace}
+@media(prefers-color-scheme:dark){.sb-foot{border-color:rgba(255,255,255,0.08)}}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:#aaa;flex-shrink:0}
+.sb-dot.live{background:#639922}
+
+/* MAIN */
+.main{margin-left:210px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{padding:10px 24px;border-bottom:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;background:#fff;position:sticky;top:0;z-index:50}
+@media(prefers-color-scheme:dark){.topbar{background:#111;border-color:rgba(255,255,255,0.08)}}
+.tb-path{font-size:11px;color:#aaa;font-family:monospace;letter-spacing:0.5px}
+.tb-path span{color:#1a1a1a}
+@media(prefers-color-scheme:dark){.tb-path span{color:#e8e8e0}}
+.tb-tags{display:flex;gap:6px}
+.tb-tag{font-size:10px;font-family:monospace;padding:3px 8px;border-radius:6px;background:#f5f4f1;color:#888;border:0.5px solid rgba(0,0,0,0.1)}
+@media(prefers-color-scheme:dark){.tb-tag{background:#222;color:#888;border-color:rgba(255,255,255,0.1)}}
+.content{padding:20px 24px;flex:1}
+
+/* PANELS */
+.panel{display:none}
+.panel.active{display:block;animation:fadeUp 0.2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:10px;padding:12px 14px}
+@media(prefers-color-scheme:dark){.kpi{background:#1a1a1a;border-color:rgba(255,255,255,0.08)}}
+.kpi-l{font-size:10px;color:#aaa;font-family:monospace;letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase}
+.kpi-v{font-size:20px;font-weight:500;color:#1a1a1a;line-height:1}
+@media(prefers-color-scheme:dark){.kpi-v{color:#e8e8e0}}
+.kpi-v.g{color:#3B6D11}.kpi-v.r{color:#A32D2D}.kpi-v.y{color:#854F0B}
+.kpi-ch{font-size:11px;margin-top:4px;font-family:monospace}
+.kpi-ch.up{color:#3B6D11}.kpi-ch.dn{color:#A32D2D}
+
+/* CARDS */
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:10px;padding:16px;margin-bottom:12px}
+@media(prefers-color-scheme:dark){.card{background:#1a1a1a;border-color:rgba(255,255,255,0.08)}}
+.card-label{font-size:10px;color:#aaa;font-family:monospace;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
+
+/* FIELDS */
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:10px;color:#888;font-family:monospace;letter-spacing:0.5px;text-transform:uppercase}
+.field input,.field select,.field textarea{background:#f5f4f1;border:0.5px solid rgba(0,0,0,0.12);border-radius:7px;padding:8px 10px;font-size:12px;font-family:monospace;color:#1a1a1a;outline:none;transition:border-color 0.15s;width:100%}
+@media(prefers-color-scheme:dark){.field input,.field select,.field textarea{background:#222;border-color:rgba(255,255,255,0.1);color:#e8e8e0}}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#185FA5}
+.field textarea{resize:vertical;min-height:100px;line-height:1.6}
+.field select option{background:#fff}
+@media(prefers-color-scheme:dark){.field select option{background:#222}}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:7px;border:none;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;white-space:nowrap}
+.btn-primary{background:#185FA5;color:#E6F1FB}
+.btn-primary:hover{background:#0C447C}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-green{background:#1D9E75;color:#04342C}
+.btn-green:hover{background:#0F6E56}
+.btn-ghost{background:#fff;color:#444;border:0.5px solid rgba(0,0,0,0.15)}
+@media(prefers-color-scheme:dark){.btn-ghost{background:#222;color:#aaa;border-color:rgba(255,255,255,0.1)}}
+.btn-ghost:hover{border-color:#185FA5;color:#185FA5}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* SECTION LABEL */
+.sec-label{font-size:10px;font-weight:500;color:#aaa;font-family:monospace;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+
+/* STATUS PILLS */
+.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;white-space:nowrap}
+.pill-g{background:#EAF3DE;color:#27500A}
+.pill-r{background:#FCEBEB;color:#791F1F}
+.pill-y{background:#FAEEDA;color:#633806}
+.pill-b{background:#E6F1FB;color:#0C447C}
+
+/* COLORS */
+.mg{color:#3B6D11}.mr{color:#A32D2D}.my{color:#854F0B}.mn{color:#888}
+
+/* CONNECTION CARD */
+.conn-status{font-size:12px;font-family:monospace;padding:7px 10px;border-radius:7px;background:#f5f4f1;border:0.5px solid rgba(0,0,0,0.1);color:#888;align-self:flex-end}
+@media(prefers-color-scheme:dark){.conn-status{background:#222;border-color:rgba(255,255,255,0.1)}}
+
+/* LEARNING TOGGLE */
+.l-bar{display:flex;gap:6px}
+.l-btn{flex:1;padding:7px;border-radius:7px;border:0.5px solid rgba(0,0,0,0.12);background:#f5f4f1;font-size:11px;font-family:monospace;cursor:pointer;color:#888;text-align:center;transition:all 0.15s}
+@media(prefers-color-scheme:dark){.l-btn{background:#222;border-color:rgba(255,255,255,0.1)}}
+.l-btn.active{background:#FAEEDA;color:#633806;border-color:#EF9F27;font-weight:500}
+.l-btn.active.g{background:#EAF3DE;color:#27500A;border-color:#639922}
+.l-btn.active.r{background:#FCEBEB;color:#791F1F;border-color:#E24B4A}
+
+/* DATA TABLE */
+.data-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.data-table th{font-size:10px;font-family:monospace;color:#aaa;text-align:left;padding:7px 10px;border-bottom:0.5px solid rgba(0,0,0,0.08);font-weight:400;letter-spacing:0.5px;text-transform:uppercase}
+@media(prefers-color-scheme:dark){.data-table th{border-color:rgba(255,255,255,0.08)}}
+.data-table td{font-size:12px;font-family:monospace;padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.05);vertical-align:middle}
+@media(prefers-color-scheme:dark){.data-table td{border-color:rgba(255,255,255,0.05)}}
+.data-table tr:last-child td{border:none}
+.data-table tr:hover td{background:rgba(0,0,0,0.02)}
+@media(prefers-color-scheme:dark){.data-table tr:hover td{background:rgba(255,255,255,0.02)}}
+.td-name{font-weight:500;color:#1a1a1a}
+@media(prefers-color-scheme:dark){.td-name{color:#e8e8e0}}
+
+/* ANALYSIS OUTPUT */
+#analysisOutput{display:none}
+
+/* DIAG CARD */
+.diag-info{font-size:12px;color:#666;line-height:1.6;background:#f5f4f1;border-radius:7px;padding:10px 12px;margin-bottom:10px}
+@media(prefers-color-scheme:dark){.diag-info{background:#222;color:#aaa}}
+.diag-list{display:flex;flex-direction:column;gap:6px}
+.diag-item{display:flex;gap:8px;font-size:12px;color:#666;line-height:1.4;align-items:flex-start}
+@media(prefers-color-scheme:dark){.diag-item{color:#888}}
+.diag-item i{font-size:14px;flex-shrink:0;margin-top:1px}
+
+/* RANK ROWS */
+.rank-row{display:grid;grid-template-columns:28px 150px 1fr auto;align-items:center;gap:12px;padding:10px 14px;border-bottom:0.5px solid rgba(0,0,0,0.06)}
+@media(prefers-color-scheme:dark){.rank-row{border-color:rgba(255,255,255,0.06)}}
+.rank-row:last-child{border:none}
+.rank-num{font-size:14px;font-weight:500;color:#ccc;font-family:monospace;text-align:center}
+.rank-name-wrap .rank-name{font-size:13px;font-weight:500;font-family:monospace;color:#1a1a1a;margin-bottom:3px}
+@media(prefers-color-scheme:dark){.rank-name-wrap .rank-name{color:#e8e8e0}}
+.rank-diag{font-size:11px;color:#888;line-height:1.4}
+.rank-metrics{display:flex;gap:14px}
+.rm{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.rm-l{font-size:9px;color:#aaa;font-family:monospace;letter-spacing:0.5px;text-transform:uppercase}
+.rm-v{font-size:12px;font-weight:500;font-family:monospace}
+
+/* ACTION ITEMS */
+.action-item{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-left:2px solid transparent;border-radius:0;margin-bottom:7px}
+@media(prefers-color-scheme:dark){.action-item{background:#1a1a1a;border-color:rgba(255,255,255,0.08)}}
+.action-item.high{border-left-color:#A32D2D}
+.action-item.medium{border-left-color:#854F0B}
+.action-item.low{border-left-color:#3B6D11}
+.action-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;font-family:monospace}
+.action-num.h{background:#FCEBEB;color:#791F1F}
+.action-num.m{background:#FAEEDA;color:#633806}
+.action-num.l{background:#EAF3DE;color:#27500A}
+.action-title{font-size:13px;font-weight:500;margin-bottom:3px}
+.action-desc{font-size:12px;color:#888;line-height:1.6}
+
+/* BRIEF */
+.brief-card{background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:10px;overflow:hidden;margin-bottom:10px}
+@media(prefers-color-scheme:dark){.brief-card{background:#1a1a1a;border-color:rgba(255,255,255,0.08)}}
+.brief-head{padding:10px 14px;border-bottom:0.5px solid rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between;background:#f5f4f1}
+@media(prefers-color-scheme:dark){.brief-head{background:#222;border-color:rgba(255,255,255,0.06)}}
+.brief-name{font-size:12px;font-weight:500;font-family:monospace;color:#1a1a1a}
+@media(prefers-color-scheme:dark){.brief-name{color:#e8e8e0}}
+.brief-body{padding:14px}
+.brief-title-text{font-size:13px;font-weight:500;margin-bottom:8px}
+.brief-instructions{font-size:12px;color:#888;line-height:1.8;white-space:pre-wrap;background:#f5f4f1;border:0.5px solid rgba(0,0,0,0.08);border-radius:7px;padding:10px 12px;font-family:monospace}
+@media(prefers-color-scheme:dark){.brief-instructions{background:#222;border-color:rgba(255,255,255,0.08)}}
+
+/* BUDGET */
+.budget-row{display:flex;align-items:center;gap:14px;background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;padding:11px 14px;margin-bottom:7px}
+@media(prefers-color-scheme:dark){.budget-row{background:#1a1a1a;border-color:rgba(255,255,255,0.08)}}
+.budget-pct{font-size:22px;font-weight:500;min-width:60px;text-align:center;font-family:monospace}
+.budget-name{font-size:13px;font-weight:500;margin-bottom:2px}
+.budget-reason{font-size:12px;color:#888}
+
+/* LOADING */
+.loading-overlay{display:none;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center}
+.loading-overlay.show{display:flex}
+.loader{width:36px;height:36px;border:1.5px solid rgba(0,0,0,0.1);border-top-color:#185FA5;border-radius:50%;animation:spin 0.7s linear infinite;margin-bottom:14px}
+@media(prefers-color-scheme:dark){.loader{border-color:rgba(255,255,255,0.08);border-top-color:#378ADD}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{font-family:monospace;font-size:12px;color:#888}
+.loading-step{font-size:11px;color:#185FA5;margin-top:5px}
+
+/* COPY BTN */
+.copy-btn{background:transparent;border:0.5px solid rgba(0,0,0,0.12);color:#aaa;padding:4px 10px;border-radius:5px;font-size:10px;cursor:pointer;font-family:monospace;transition:all 0.15s}
+@media(prefers-color-scheme:dark){.copy-btn{border-color:rgba(255,255,255,0.1)}}
+.copy-btn:hover{border-color:#185FA5;color:#185FA5}
+
+/* NOTIF */
+.notif{position:fixed;bottom:20px;right:20px;background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:8px;padding:10px 16px;font-family:monospace;font-size:11px;color:#1a1a1a;transform:translateY(60px);opacity:0;transition:all 0.2s;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+@media(prefers-color-scheme:dark){.notif{background:#222;border-color:rgba(255,255,255,0.1);color:#e8e8e0}}
+.notif.show{transform:translateY(0);opacity:1}
+
+/* PROGRESS */
+.progress-bar{height:2px;background:rgba(0,0,0,0.06);border-radius:1px;overflow:hidden;margin-bottom:20px}
+@media(prefers-color-scheme:dark){.progress-bar{background:rgba(255,255,255,0.06)}}
+.progress-fill{height:100%;background:linear-gradient(90deg,#185FA5,#1D9E75);width:0%;transition:width 0.6s ease}
+
+/* SAMPLE BTN */
+.sample-btn{font-family:monospace;font-size:10px;color:#888;background:transparent;border:0.5px solid rgba(0,0,0,0.1);padding:4px 10px;border-radius:5px;cursor:pointer;transition:all 0.15s}
+@media(prefers-color-scheme:dark){.sample-btn{border-color:rgba(255,255,255,0.1)}}
+.sample-btn:hover{border-color:#185FA5;color:#185FA5}
+
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;gap:12px}
+.step-num{width:24px;height:24px;background:#f5f4f1;border:0.5px solid rgba(0,0,0,0.1);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:10px;color:#185FA5;flex-shrink:0}
+@media(prefers-color-scheme:dark){.step-num{background:#222;border-color:rgba(255,255,255,0.1)}}
+.step-body{padding-top:2px}
+.step-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.step-desc{font-size:12px;color:#888;line-height:1.5}
+code{font-family:monospace;background:#f5f4f1;border:0.5px solid rgba(0,0,0,0.1);padding:1px 5px;border-radius:4px;font-size:11px;color:#185FA5}
+@media(prefers-color-scheme:dark){code{background:#222;border-color:rgba(255,255,255,0.1)}}
+
+/* DATA PREVIEW */
+#dataPreviewWrap{display:none;margin-bottom:12px}
+#rawDataWrap{display:none;margin-bottom:12px}
+#emptyDataWrap{margin-bottom:12px}
+.td-status-a{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:500;font-family:monospace;padding:2px 7px;border-radius:20px;background:#EAF3DE;color:#27500A}
+.td-status-p{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:500;font-family:monospace;padding:2px 7px;border-radius:20px;background:#FCEBEB;color:#791F1F}
+.td-g{font-family:monospace;font-size:12px;font-weight:500;color:#3B6D11}
+.td-r{font-family:monospace;font-size:12px;font-weight:500;color:#A32D2D}
+.td-y{font-family:monospace;font-size:12px;font-weight:500;color:#854F0B}
+.td-n{font-family:monospace;font-size:12px;color:#888}
+
+/* BG STATS */
+.bg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.bg-stat{background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;padding:12px 14px}
+@media(prefers-color-scheme:dark){.bg-stat{background:#1a1a1a;border-color:rgba(255,255,255,0.08)}}
+.bg-stat-label{font-family:monospace;font-size:9px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.bg-stat-val{font-size:22px;font-weight:500;color:#3B6D11}
+
+/* SUBID TABLE */
+.subid-table{width:100%;border-collapse:collapse}
+.subid-table th{font-family:monospace;font-size:9px;letter-spacing:1px;color:#aaa;text-align:left;padding:7px 10px;border-bottom:0.5px solid rgba(0,0,0,0.08);text-transform:uppercase;font-weight:400}
+@media(prefers-color-scheme:dark){.subid-table th{border-color:rgba(255,255,255,0.08)}}
+.subid-table td{padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.05);font-family:monospace;font-size:12px}
+@media(prefers-color-scheme:dark){.subid-table td{border-color:rgba(255,255,255,0.05)}}
+.subid-table tr:last-child td{border:none}
+.subid-table tr:hover td{background:rgba(0,0,0,0.02)}
+
+/* BAR CHART */
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-label{font-family:monospace;font-size:11px;color:#888;width:80px;flex-shrink:0}
+.bar-track{flex:1;height:5px;background:#f5f4f1;border-radius:3px;overflow:hidden}
+@media(prefers-color-scheme:dark){.bar-track{background:#222}}
+.bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
+.bar-val{font-family:monospace;font-size:11px;color:#1a1a1a;width:60px;text-align:right;flex-shrink:0}
+@media(prefers-color-scheme:dark){.bar-val{color:#e8e8e0}}
+
+/* INLINE TABS */
+.inline-tabs{display:flex;border:0.5px solid rgba(0,0,0,0.1);border-radius:7px;overflow:hidden;width:fit-content;margin-bottom:14px}
+@media(prefers-color-scheme:dark){.inline-tabs{border-color:rgba(255,255,255,0.1)}}
+.inline-tab{padding:6px 14px;font-family:monospace;font-size:11px;cursor:pointer;border:none;background:#f5f4f1;color:#888;transition:all 0.15s}
+@media(prefers-color-scheme:dark){.inline-tab{background:#222}}
+.inline-tab.active{background:#185FA5;color:#fff;font-weight:500}
+
+/* OV PANEL */
+.ov-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.ov-kpi{background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:10px;padding:14px}
+@media(prefers-color-scheme:dark){.ov-kpi{background:#1a1a1a;border-color:rgba(255,255,255,0.08)}}
+.ov-kpi-label{font-family:monospace;font-size:9px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.ov-kpi-val{font-size:20px;font-weight:500;color:#1a1a1a;line-height:1;margin-bottom:3px}
+@media(prefers-color-scheme:dark){.ov-kpi-val{color:#e8e8e0}}
+.ov-kpi-change{font-family:monospace;font-size:10px}
+.ov-kpi-change.up{color:#3B6D11}.ov-kpi-change.down{color:#A32D2D}
+
+/* HELP */
+.help-section{margin-bottom:24px}
+.help-section-title{font-size:15px;font-weight:500;margin-bottom:12px;padding-bottom:8px;border-bottom:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;gap:8px}
+@media(prefers-color-scheme:dark){.help-section-title{border-color:rgba(255,255,255,0.08)}}
+.help-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.help-card{background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;padding:14px}
+@media(prefers-color-scheme:dark){.help-card{background:#1a1a1a;border-color:rgba(255,255,255,0.08)}}
+.help-field-name{font-family:monospace;font-size:11px;font-weight:500;color:#185FA5;margin-bottom:7px}
+.help-field-desc{font-size:12px;color:#888;line-height:1.7;margin-bottom:7px}
+.help-field-desc strong{color:#1a1a1a}
+@media(prefers-color-scheme:dark){.help-field-desc strong{color:#e8e8e0}}
+.help-tip{font-size:11px;color:#aaa;background:#f5f4f1;border-radius:5px;padding:7px 10px;line-height:1.5;font-family:monospace}
+@media(prefers-color-scheme:dark){.help-tip{background:#222}}
+.help-flow{display:flex;flex-direction:column;gap:0;max-width:520px}
+.help-flow-step{display:flex;gap:12px;align-items:flex-start;background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;padding:12px 14px}
+@media(prefers-color-scheme:dark){.help-flow-step{background:#1a1a1a;border-color:rgba(255,255,255,0.08)}}
+.help-flow-arrow{text-align:left;padding-left:18px;color:#ddd;font-size:16px;line-height:1.2}
+.help-flow-num{width:24px;height:24px;background:#E6F1FB;border:0.5px solid #B5D4F4;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:10px;color:#185FA5;font-weight:500;flex-shrink:0}
+.help-flow-content{flex:1}
+.help-flow-title{font-size:13px;font-weight:500;margin-bottom:3px}
+.help-flow-desc{font-size:12px;color:#888;line-height:1.5}
+
+/* CUSTOM DATE */
+#customDateRange{display:none;gap:8px}
+#customDateRange.show{display:flex}
+
+/* META SELECTORS */
+#metaSelectors{display:none}
+
+/* CAMP INFO STRIP */
+#metaCampInfo{display:none;background:#f5f4f1;border:0.5px solid rgba(0,0,0,0.08);border-radius:7px;padding:10px 14px;margin-top:10px;flex-wrap:wrap;gap:16px;font-family:monospace;font-size:11px;color:#888}
+@media(prefers-color-scheme:dark){#metaCampInfo{background:#222;border-color:rgba(255,255,255,0.08)}}
+#metaCampInfo span span:first-child{color:#aaa}
+#metaCampInfo span span:last-child{color:#1a1a1a;margin-left:4px}
+@media(prefers-color-scheme:dark){#metaCampInfo span span:last-child{color:#e8e8e0}}
+
+/* STRUCT EMPTY */
+#structEmptyState{font-size:12px;color:#aaa;font-family:monospace;padding:4px 0}
+
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.g4,.g3,.g2{grid-template-columns:1fr 1fr}.ov-kpi-grid{grid-template-columns:1fr 1fr 1fr}.help-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.g4,.g3,.g2{grid-template-columns:1fr}.kpi-row{grid-template-columns:1fr 1fr}.content{padding:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-name">AdBrain</div>
+    <div class="sb-logo-sub">V3.0 · DRC SYSTEM</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">ANÁLISE</div>
+    <div class="sb-item" onclick="showPanel('overview',this)"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Visão Geral</div>
+    <div class="sb-item active" onclick="showPanel('analyze',this)"><i class="ti ti-bolt" aria-hidden="true"></i> Analisar Campanha</div>
+    <div class="sb-item" onclick="showPanel('buygoods',this)"><i class="ti ti-currency-dollar" aria-hidden="true"></i> BuyGoods API</div>
+    <div class="sb-sec">CONFIG</div>
+    <div class="sb-item" onclick="showPanel('config',this)"><i class="ti ti-settings" aria-hidden="true"></i> Configuração</div>
+    <div class="sb-item" onclick="showPanel('help',this)"><i class="ti ti-help-circle" aria-hidden="true"></i> Ajuda</div>
+    <div class="sb-item" onclick="showPanel('code',this)"><i class="ti ti-code" aria-hidden="true"></i> Código Python</div>
+  </nav>
+  <div class="sb-foot"><span class="sb-dot" id="apiStatusDot"></span><span id="apiStatusText">API não configurada</span></div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="tb-path">ADBRAIN / <span id="topbarSection">ANALISAR CAMPANHA</span></div>
+    <div class="tb-tags"><span class="tb-tag">Próstata</span><span class="tb-tag">EUA</span><span class="tb-tag">Meta Ads</span></div>
+  </div>
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div id="panel-overview" class="panel">
+      <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="fetchOverviewData()"><i class="ti ti-refresh" style="font-size:14px" aria-hidden="true"></i> Atualizar da Meta API</button>
+        <button class="btn btn-ghost" onclick="loadOverviewSample()"><i class="ti ti-database" style="font-size:14px" aria-hidden="true"></i> Dados de Exemplo</button>
+        <select id="overviewPreset" style="background:#f5f4f1;border:0.5px solid rgba(0,0,0,0.12);border-radius:7px;padding:7px 10px;font-family:monospace;font-size:12px;color:#1a1a1a;outline:none">
+          <option value="last_7d">Últimos 7 dias</option>
+          <option value="last_14d">Últimos 14 dias</option>
+          <option value="last_30d">Últimos 30 dias</option>
+          <option value="today">Hoje</option>
+        </select>
+      </div>
+      <div class="ov-kpi-grid">
+        <div class="ov-kpi"><div class="ov-kpi-label">GASTO</div><div class="ov-kpi-val" id="ovSpend">—</div><div class="ov-kpi-change" id="ovSpendChg"></div></div>
+        <div class="ov-kpi"><div class="ov-kpi-label">RECEITA</div><div class="ov-kpi-val" id="ovRevenue">—</div><div class="ov-kpi-change" id="ovRevenueChg"></div></div>
+        <div class="ov-kpi"><div class="ov-kpi-label">ROAS</div><div class="ov-kpi-val" id="ovRoas">—</div><div class="ov-kpi-change" id="ovRoasChg"></div></div>
+        <div class="ov-kpi"><div class="ov-kpi-label">CONVERSÕES</div><div class="ov-kpi-val" id="ovConv">—</div><div class="ov-kpi-change" id="ovConvChg"></div></div>
+        <div class="ov-kpi"><div class="ov-kpi-label">CPA</div><div class="ov-kpi-val" id="ovCpa">—</div><div class="ov-kpi-change" id="ovCpaChg"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 260px;gap:14px;margin-bottom:14px">
+        <div class="card" style="margin-bottom:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="card-label" style="margin-bottom:0">DESEMPENHO</div>
+            <div style="display:flex;gap:12px;font-family:monospace;font-size:10px;color:#aaa">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:#185FA5;display:inline-block;border-radius:1px"></span>Receita</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:#ccc;display:inline-block;border-radius:1px"></span>Gasto</span>
+            </div>
+          </div>
+          <div style="position:relative;height:180px"><canvas id="perfChart" style="width:100%;height:100%"></canvas></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="card" style="margin-bottom:0;flex:1">
+            <div class="card-label">CANAIS</div>
+            <canvas id="donutChart" width="80" height="80" style="display:block;margin:0 auto 8px"></canvas>
+            <div id="donutLegend" style="font-size:11px;font-family:monospace;display:flex;flex-direction:column;gap:4px"></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-label">DISPOSITIVOS</div>
+            <div id="devicesChart" style="display:flex;flex-direction:column;gap:7px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">CAMPANHAS</div>
+        <div style="overflow-x:auto"><table class="subid-table" id="ovCampsTable"><thead><tr><th>Campanha</th><th>Status</th><th>Gasto</th><th>Receita</th><th>ROAS</th><th>CPA</th><th>Conversões</th></tr></thead><tbody id="ovCampsBody"><tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">Carregue dados para ver as campanhas</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ANALYZE -->
+    <div id="panel-analyze" class="panel active">
+
+      <!-- META CONNECTION -->
+      <div class="card">
+        <div class="card-label">CONECTAR META API</div>
+        <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap">
+          <div class="field" style="flex:1;min-width:200px">
+            <label>Access Token</label>
+            <input type="password" id="metaToken" placeholder="EAAxxxxx..." autocomplete="off">
+          </div>
+          <button class="btn btn-green" onclick="metaConnect()" id="metaConnectBtn"><i class="ti ti-plug" style="font-size:14px" aria-hidden="true"></i> Conectar</button>
+          <div id="metaConnectStatus" style="font-family:monospace;font-size:11px;color:#aaa;align-self:center"></div>
+        </div>
+        <div id="metaSelectors">
+          <div class="g3" style="margin-bottom:10px">
+            <div class="field"><label>Conta de Anúncios</label><select id="metaAccountSel" onchange="metaLoadCampaigns()"><option value="">Selecione a conta...</option></select></div>
+            <div class="field"><label>Campanha</label><select id="metaCampaignSel" onchange="metaCampaignSelected()"><option value="">Selecione a campanha...</option></select></div>
+            <div class="field"><label>Conjunto de Anúncios</label><select id="metaAdsetSel" onchange="metaAdsetSelected()" disabled><option value="">Todos os conjuntos</option></select></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px">
+            <div class="field">
+              <label>Período</label>
+              <select id="metaPreset" onchange="toggleCustomDate()">
+                <option value="last_7d">Últimos 7 dias</option>
+                <option value="last_14d">Últimos 14 dias</option>
+                <option value="last_30d">Últimos 30 dias</option>
+                <option value="today">Hoje</option>
+                <option value="yesterday">Ontem</option>
+                <option value="custom">Personalizado...</option>
+              </select>
+            </div>
+            <div id="customDateRange" style="gap:8px">
+              <div class="field"><label>De</label><input type="date" id="customDateFrom"></div>
+              <div class="field"><label>Até</label><input type="date" id="customDateTo"></div>
+            </div>
+            <button class="btn btn-primary" onclick="fetchMetaCreatives()" id="metaLoadBtn" disabled><i class="ti ti-download" style="font-size:14px" aria-hidden="true"></i> Carregar Dados</button>
+          </div>
+          <div id="metaCampInfo"></div>
+        </div>
+        <div id="metaFetchStatus" style="font-family:monospace;font-size:11px;color:#aaa;margin-top:6px"></div>
+        <div style="margin-top:8px;font-family:monospace;font-size:10px;color:#aaa">Apenas leitura — não altera nada no BM. Requer <code>ads_read</code> + <code>ads_management</code>.</div>
+      </div>
+
+      <!-- ESTRUTURA -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="card-label" style="margin-bottom:0">ESTRUTURA DA CAMPANHA</div>
+          <span style="font-family:monospace;font-size:10px;color:#aaa">preenchido via API</span>
+        </div>
+        <input type="hidden" id="campType" value="ABO">
+        <input type="hidden" id="bidStrategy" value="lowest_cost">
+        <input type="hidden" id="campObjective" value="purchase">
+        <input type="hidden" id="daysRunning" value="7">
+        <input type="hidden" id="dailyBudget" value="">
+        <input type="hidden" id="bidCapVal" value="">
+        <input type="hidden" id="numAdsets" value="">
+        <input type="hidden" id="pixelEvents" value="">
+        <div id="structEmptyState">Conecte a Meta API acima para preencher automaticamente.</div>
+        <div style="margin-top:12px">
+          <div style="font-family:monospace;font-size:10px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">FASE DE APRENDIZADO</div>
+          <div class="l-bar">
+            <button class="l-btn active" id="btnLearning" onclick="setLearning('learning')">Em aprendizado</button>
+            <button class="l-btn" id="btnLimited" onclick="setLearning('learning_limited')">Limitado</button>
+            <button class="l-btn g" id="btnActive" onclick="setLearning('active')">Ativo</button>
+          </div>
+          <div style="font-size:12px;color:#854F0B;margin-top:6px;font-family:monospace" id="learningLabel">Campanha em aprendizado — evitar mudanças bruscas</div>
+        </div>
+        <input type="hidden" id="learningPhase" value="learning">
+      </div>
+
+      <!-- PERFORMANCE DATA -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="card-label" style="margin-bottom:0">DADOS DE PERFORMANCE</div>
+          <button class="sample-btn" onclick="loadSample()">↓ Exemplo</button>
+        </div>
+
+        <div id="dataPreviewWrap">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-family:monospace;font-size:10px;color:#185FA5;letter-spacing:1px">DADOS CARREGADOS</div>
+            <button class="copy-btn" onclick="toggleRawData()">ver dados brutos</button>
+          </div>
+          <div style="overflow-x:auto"><table class="data-table" id="dataPreviewTable"></table></div>
+        </div>
+
+        <div id="rawDataWrap">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-family:monospace;font-size:10px;color:#aaa;letter-spacing:1px">DADOS BRUTOS</div>
+            <button class="copy-btn" onclick="toggleRawData()">ver tabela</button>
+          </div>
+          <div class="field"><textarea id="campaignData" style="min-height:100px"></textarea></div>
+        </div>
+
+        <div id="emptyDataWrap">
+          <div class="field">
+            <label>Dados dos criativos — preenchido automaticamente ou cole manualmente</label>
+            <textarea id="campaignDataEmpty" placeholder="Criativo | Status | Gasto | Compras | CPA | ROAS | CTR | Frequência&#10;VD239 | Ativo | $75.96 | 8 | $9.49 | 2.97x | 3.45% | 1.2" oninput="syncRawData(this.value)"></textarea>
+          </div>
+        </div>
+
+        <div class="g4" style="margin:12px 0">
+          <div class="field"><label>CPA Aceitável ($)</label><input type="number" id="maxCPA" value="80"></div>
+          <div class="field"><label>CPA Limite — Pausar ($)</label><input type="number" id="limitCPA" value="120"></div>
+          <div class="field"><label>ROAS Mínimo</label><input type="number" id="minROAS" value="2.5" step="0.1"></div>
+          <div class="field"><label>Frequência Máx.</label><input type="number" id="maxFreq" value="3.5" step="0.1"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="analyzeBtn" onclick="runAnalysis()"><i class="ti ti-bolt" style="font-size:14px" aria-hidden="true"></i> Analisar com Claude</button>
+          <button class="btn btn-ghost" onclick="clearAll()"><i class="ti ti-x" style="font-size:14px" aria-hidden="true"></i> Limpar</button>
+        </div>
+      </div>
+
+      <div class="loading-overlay" id="loadingState">
+        <div class="loader"></div>
+        <div class="loading-msg">Claude analisando sua campanha...</div>
+        <div class="loading-step" id="loadingStep">Processando métricas...</div>
+      </div>
+
+      <div id="analysisOutput">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="card-label" style="margin-bottom:0">DIAGNÓSTICO DA CAMPANHA</div><button class="copy-btn" onclick="copyEl('campDiagContent')">copiar</button></div><div id="campDiagContent"></div></div>
+        <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="card-label" style="margin-bottom:0">RANKING DE CRIATIVOS</div><button class="copy-btn" onclick="copyEl('rankingContent')">copiar</button></div><div id="rankingContent"></div></div>
+        <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="card-label" style="margin-bottom:0">PLANO DE AÇÃO</div><button class="copy-btn" onclick="copyEl('actionsContent')">copiar</button></div><div id="actionsContent"></div></div>
+        <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="card-label" style="margin-bottom:0">BRIEFS PARA O EDITOR</div><button class="copy-btn" onclick="copyEl('briefsContent')">copiar</button></div><div id="briefsContent"></div></div>
+        <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="card-label" style="margin-bottom:0">REDISTRIBUIÇÃO DE BUDGET</div><button class="copy-btn" onclick="copyEl('budgetContent')">copiar</button></div><div id="budgetContent"></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <button class="btn btn-primary" onclick="copyFullReport()"><i class="ti ti-clipboard" style="font-size:14px" aria-hidden="true"></i> Copiar Relatório Completo</button>
+          <button class="btn btn-ghost" onclick="clearAll()">Nova Análise</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUYGOODS -->
+    <div id="panel-buygoods" class="panel">
+      <div class="card">
+        <div class="card-label">CREDENCIAIS BUYGOODS</div>
+        <div class="g2" style="margin-bottom:10px">
+          <div class="field"><label>API Key / Token</label><input type="password" id="bgApiKey" placeholder="Sua API key"></div>
+          <div class="field"><label>Afiliado ID</label><input type="text" id="bgAffId" placeholder="Seu ID de afiliado"></div>
+        </div>
+        <div class="g3" style="margin-bottom:10px">
+          <div class="field"><label>Data Início</label><input type="date" id="bgDateFrom"></div>
+          <div class="field"><label>Data Fim</label><input type="date" id="bgDateTo"></div>
+          <div class="field"><label>Produto (opcional)</label><input type="text" id="bgProduct" placeholder="ID ou nome"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-green" onclick="fetchBuyGoods()"><i class="ti ti-plug" style="font-size:14px" aria-hidden="true"></i> Buscar Dados BuyGoods</button>
+          <button class="btn btn-ghost" onclick="loadBGSample()"><i class="ti ti-database" style="font-size:14px" aria-hidden="true"></i> Dados de Exemplo</button>
+        </div>
+      </div>
+      <div class="loading-overlay" id="bgLoading"><div class="loader"></div><div class="loading-msg">Buscando dados do BuyGoods...</div><div class="loading-step" id="bgLoadingStep">Conectando...</div></div>
+      <div id="bgOutput" style="display:none">
+        <div class="bg-stats" id="bgStatsGrid"></div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="card-label" style="margin-bottom:0">DADOS DE VENDAS</div>
+            <div class="inline-tabs">
+              <button class="inline-tab active" onclick="switchBGTab('subid',this)">Por SubID</button>
+              <button class="inline-tab" onclick="switchBGTab('day',this)">Por Dia</button>
+              <button class="inline-tab" onclick="switchBGTab('hour',this)">Por Hora</button>
+            </div>
+          </div>
+          <div id="bgSubidPanel"><table class="subid-table" id="subidTable"></table></div>
+          <div id="bgDayPanel" style="display:none"><div class="bar-chart" id="dayChart"></div></div>
+          <div id="bgHourPanel" style="display:none"><div class="bar-chart" id="hourChart"></div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="card-label" style="margin-bottom:0">CRUZAMENTO BUYGOODS × META ADS</div><button class="copy-btn" onclick="copyEl('crossContent')">copiar</button></div>
+          <div id="crossContent"><div style="font-size:13px;color:#888;line-height:1.6">Cole os dados do Meta Ads na aba <strong>Analisar Campanha</strong> e execute a análise para ver o cruzamento aqui.</div></div>
+        </div>
+        <button class="btn btn-green" onclick="runCrossAnalysis()"><i class="ti ti-git-merge" style="font-size:14px" aria-hidden="true"></i> Analisar Cruzamento com Claude</button>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div id="panel-config" class="panel">
+      <div class="card">
+        <div class="card-label">API CLAUDE (ANTHROPIC)</div>
+        <div class="steps" style="margin-bottom:16px">
+          <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Crie conta em console.anthropic.com</div><div class="step-desc">Acesse e crie sua conta de desenvolvedor.</div></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Gere a API Key</div><div class="step-desc">API Keys → Create Key. Começa com <code>sk-ant-...</code></div></div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Cole abaixo e salve</div><div class="step-desc">Salvo localmente no navegador.</div></div></div>
+        </div>
+        <div class="field" style="margin-bottom:12px"><label>Anthropic API Key</label><input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off"></div>
+        <button class="btn btn-primary" onclick="saveConfig()"><i class="ti ti-device-floppy" style="font-size:14px" aria-hidden="true"></i> Salvar Configuração</button>
+      </div>
+      <div class="card">
+        <div class="card-label">PERFIL DO NEGÓCIO</div>
+        <div class="g3" style="margin-bottom:10px">
+          <div class="field"><label>Nicho</label><input type="text" id="cfgNiche" value="Suplemento para saúde da próstata"></div>
+          <div class="field"><label>Mercado</label><select id="cfgMarket"><option value="US">🇺🇸 Estados Unidos</option><option value="BR">🇧🇷 Brasil</option></select></div>
+          <div class="field"><label>Modelo</label><select id="cfgModel"><option value="affiliate">Afiliado</option><option value="proprio">Produto Próprio</option></select></div>
+          <div class="field"><label>Comissão por Venda ($)</label><input type="number" id="cfgCommission" value="200"></div>
+          <div class="field"><label>Rede de Afiliados</label><select id="cfgNetwork"><option value="buygoods">BuyGoods</option><option value="clickbank">ClickBank</option></select></div>
+          <div class="field"><label>Ticket Médio ($)</label><input type="number" id="cfgTicket" value="99"></div>
+        </div>
+        <div class="field" style="margin-bottom:12px"><label>Público-Alvo</label><input type="text" id="cfgAudience" value="Homens 45-70 anos, EUA, problemas de próstata"></div>
+        <button class="btn btn-primary" onclick="saveConfig()"><i class="ti ti-device-floppy" style="font-size:14px" aria-hidden="true"></i> Salvar</button>
+      </div>
+    </div>
+
+    <!-- HELP -->
+    <div id="panel-help" class="panel">
+      <div class="help-section">
+        <div class="help-section-title">📊 Visão Geral</div>
+        <div class="help-grid">
+          <div class="help-card"><div class="help-field-name">Meta Access Token</div><div class="help-field-desc">Token de acesso à Meta API. Gere em <code>developers.facebook.com/tools/explorer</code> com permissões <code>ads_read</code> e <code>ads_management</code>.</div><div class="help-tip">⚡ Dura 1-2h. Para uso contínuo, gere um token de longa duração (60 dias).</div></div>
+          <div class="help-card"><div class="help-field-name">ROAS</div><div class="help-field-desc">Receita ÷ Gasto. ROAS 2.5x com comissão de $200 significa $500 de receita para cada $200 gasto. Abaixo de 2.5x = no limite da lucratividade.</div></div>
+          <div class="help-card"><div class="help-field-name">CPA</div><div class="help-field-desc">Custo por aquisição (venda). Com comissão de $200: CPA até $80 = lucrativo. CPA acima de $120 = pausar. Entre $80-120 = monitorar.</div></div>
+          <div class="help-card"><div class="help-field-name">Conversões vs BuyGoods</div><div class="help-field-desc">A Meta usa janela de atribuição de 7d clique + 1d view. O BuyGoods mostra vendas reais. Sempre tome decisões pelo CPA real do BuyGoods.</div><div class="help-tip">⚠ Discrepância grande pode indicar compras canceladas ou problema de atribuição.</div></div>
+        </div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">🏗️ Estrutura da Campanha</div>
+        <div class="help-grid">
+          <div class="help-card"><div class="help-field-name">ABO vs CBO</div><div class="help-field-desc"><strong>ABO</strong> — budget no ad set, mais controle. <strong>CBO</strong> — Meta distribui o budget automaticamente. Para testes: ABO. Para escalar criativos validados: CBO.</div></div>
+          <div class="help-card"><div class="help-field-name">Bid Cap</div><div class="help-field-desc">Limite de lance por leilão. Use 1.5x–2x o CPA alvo. Muito baixo = campanha não entrega. Muito alto = CPA estoura.</div><div class="help-tip">⚠ Bid Cap muito conservador pode paralisar a entrega.</div></div>
+          <div class="help-card"><div class="help-field-name">Fase de Aprendizado</div><div class="help-field-desc"><strong>Em aprendizado</strong> — menos de 50 eventos/semana, evitar mudanças. <strong>Limitado</strong> — consolidar ad sets. <strong>Ativo</strong> — pode otimizar normalmente.</div></div>
+          <div class="help-card"><div class="help-field-name">Compras no Pixel (7d)</div><div class="help-field-desc">Meta precisa de 50+ compras/semana para otimizar bem. Abaixo disso, considerar mudar o evento de otimização para Iniciar Checkout ou Adicionar ao Carrinho.</div></div>
+        </div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">💰 BuyGoods API</div>
+        <div class="help-grid">
+          <div class="help-card"><div class="help-field-name">API Key BuyGoods</div><div class="help-field-desc">Solicite ao seu gerente de afiliados (Eduard ou Dane). Acessa os endpoints: <code>sales/by-day</code>, <code>sales/by-hour</code>, <code>sales/by-subid</code>, <code>commissions</code>.</div></div>
+          <div class="help-card"><div class="help-field-name">SubID</div><div class="help-field-desc">Parâmetro no link de afiliado que identifica o criativo. Configure como o nome do criativo (ex: PT5745-H9) para cruzar com o Meta Ads automaticamente.</div><div class="help-tip">⚡ Formato: <code>seulink.com?sub=PT5745-H9</code></div></div>
+        </div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">🚀 Fluxo de Uso</div>
+        <div class="help-flow">
+          <div class="help-flow-step"><div class="help-flow-num">1</div><div class="help-flow-content"><div class="help-flow-title">Configurar uma vez</div><div class="help-flow-desc">API Key do Claude, comissão, nicho e público em Configuração.</div></div></div>
+          <div class="help-flow-arrow">↓</div>
+          <div class="help-flow-step"><div class="help-flow-num">2</div><div class="help-flow-content"><div class="help-flow-title">Conectar Meta API</div><div class="help-flow-desc">Cola o token, seleciona conta → campanha → conjunto → período → Carregar Dados.</div></div></div>
+          <div class="help-flow-arrow">↓</div>
+          <div class="help-flow-step"><div class="help-flow-num">3</div><div class="help-flow-content"><div class="help-flow-title">Marcar fase de aprendizado</div><div class="help-flow-desc">Toggle de 3 opções — muda o diagnóstico do Claude.</div></div></div>
+          <div class="help-flow-arrow">↓</div>
+          <div class="help-flow-step"><div class="help-flow-num">4</div><div class="help-flow-content"><div class="help-flow-title">Analisar com Claude</div><div class="help-flow-desc">Ranking + diagnóstico + plano de ação + briefs + budget em ~30 segundos.</div></div></div>
+          <div class="help-flow-arrow">↓</div>
+          <div class="help-flow-step"><div class="help-flow-num">5</div><div class="help-flow-content"><div class="help-flow-title">Executar</div><div class="help-flow-desc">Escalar, pausar, passar briefs para o editor, redistribuir budget.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CODE -->
+    <div id="panel-code" class="panel">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="card-label" style="margin-bottom:0">META_ADS_ANALYZER.PY</div><button class="copy-btn" onclick="copyCode()">copiar código</button></div>
+        <pre id="pythonCode" style="background:#f5f4f1;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;padding:16px;overflow-x:auto;font-family:monospace;font-size:11px;line-height:1.9;color:#444;white-space:pre-wrap;max-height:480px;overflow-y:auto"></pre>
+      </div>
+      <div class="card">
+        <div class="card-label">COMO USAR</div>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Instalar dependências</div><div class="step-desc"><code>pip install anthropic requests schedule python-dotenv</code></div></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Criar .env</div><div class="step-desc"><code>ANTHROPIC_API_KEY=sk-ant-...</code> · <code>META_ACCESS_TOKEN=token</code> · <code>META_AD_ACCOUNT=act_XXX</code> · <code>BUYGOODS_API_KEY=key</code></div></div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Rodar</div><div class="step-desc"><code>python meta_ads_analyzer.py</code> — agenda toda segunda às 9h.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+<div class="notif" id="notif"></div>
+<script>
+
+let cfg={apiKey:localStorage.getItem('ab2_key')||'',niche:localStorage.getItem('ab2_niche')||'Suplemento para saúde da próstata',market:localStorage.getItem('ab2_market')||'US',commission:localStorage.getItem('ab2_commission')||'200',audience:localStorage.getItem('ab2_audience')||'Homens 45-70 anos, EUA, problemas de próstata',ticket:localStorage.getItem('ab2_ticket')||'99'};
+let bgData=null;
+const panelTitles={overview:'VISÃO GERAL',help:'AJUDA',analyze:'ANALISAR CAMPANHA',buygoods:'BUYGOODS API',config:'CONFIGURAÇÃO',code:'CÓDIGO PYTHON',buygoods:'BUYGOODS API',config:'CONFIGURAÇÃO',code:'CÓDIGO PYTHON'};
+window.onload=()=>{
+  if(cfg.apiKey){document.getElementById('apiKey').value=cfg.apiKey;setApiStatus(true)}
+  const savedToken=localStorage.getItem('ab2_meta_token');
+  if(savedToken){document.getElementById('metaToken').value=savedToken}
+  document.getElementById('cfgNiche').value=cfg.niche;
+  document.getElementById('cfgCommission').value=cfg.commission;
+  document.getElementById('cfgAudience').value=cfg.audience;
+  document.getElementById('cfgTicket').value=cfg.ticket;
+  const t=new Date(),f=new Date(t);f.setDate(t.getDate()-7);
+  document.getElementById('bgDateTo').value=t.toISOString().split('T')[0];
+  document.getElementById('bgDateFrom').value=f.toISOString().split('T')[0];
+  renderPythonCode();
+};
+function setApiStatus(ok){const d=document.getElementById('apiStatusDot'),t=document.getElementById('apiStatusText');if(ok){d.classList.add('live');t.textContent='API conectada'}else{d.classList.remove('live');t.textContent='API não configurada'}}
+function showPanel(name,el){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('panel-'+name).classList.add('active');el.classList.add('active');document.getElementById('topbarSection').textContent=panelTitles[name]}
+function saveConfig(){const k=document.getElementById('apiKey').value.trim();if(k){localStorage.setItem('ab2_key',k);cfg.apiKey=k;setApiStatus(true)}const n=document.getElementById('cfgNiche').value.trim(),c=document.getElementById('cfgCommission').value.trim(),a=document.getElementById('cfgAudience').value.trim(),ti=document.getElementById('cfgTicket').value.trim();localStorage.setItem('ab2_niche',n);cfg.niche=n;localStorage.setItem('ab2_commission',c);cfg.commission=c;localStorage.setItem('ab2_audience',a);cfg.audience=a;localStorage.setItem('ab2_ticket',ti);cfg.ticket=ti;showNotif('✓ Configuração salva')}
+function loadSample(){document.getElementById('campaignData').value='Criativo | Gasto | Compras | CPP | ROAS | CTR | Frequência\nVD239 | $75.96 | 8 | $9.49 | 2.97x | 3.45% | 1.2\nVD169 | $558.33 | 30 | $18.61 | 1.39x | 6.88% | 2.1\nVD244 | $61.63 | 4 | $15.41 | 1.39x | 3.42% | 1.8\nVD141 | $5252.17 | 202 | $26.00 | 1.11x | 2.79% | 4.1\nVD189 | $282.38 | 9 | $31.38 | 0.87x | 2.75% | 2.3\nVD236 | $457.09 | 18 | $25.39 | 0.93x | 3.63% | 1.6\nVD240 | $83.76 | 2 | $41.88 | 0.51x | 4.28% | 1.1';document.getElementById('daysRunning').value='12';document.getElementById('dailyBudget').value='600';document.getElementById('numAdsets').value='5';document.getElementById('pixelEvents').value='273';renderDataPreview(document.getElementById('campaignDataEmpty').value);showNotif('✓ Dados de exemplo carregados')}
+function getCampaignStructure(){return{type:document.getElementById('campType').value,bidStrategy:document.getElementById('bidStrategy').value,objective:document.getElementById('campObjective').value,daysRunning:document.getElementById('daysRunning').value,learningPhase:document.getElementById('learningPhase').value,dailyBudget:document.getElementById('dailyBudget').value,bidCapVal:document.getElementById('bidCapVal').value,numAdsets:document.getElementById('numAdsets').value,pixelEvents:document.getElementById('pixelEvents').value}}
+async function runAnalysis(){
+  const data=document.getElementById('campaignData').value.trim();
+  const apiKey=localStorage.getItem('ab2_key')||document.getElementById('apiKey').value.trim();
+  if(!data){showNotif('⚠ Cole os dados da campanha');return}
+  if(!apiKey){showNotif('⚠ Configure sua API Key');return}
+  const maxCPA=parseFloat(document.getElementById('maxCPA').value)||80;
+  const limitCPA=parseFloat(document.getElementById('limitCPA').value)||120;
+  const minROAS=parseFloat(document.getElementById('minROAS').value)||2.5;
+  const maxFreq=parseFloat(document.getElementById('maxFreq').value)||3.5;
+  const s=getCampaignStructure();
+  document.getElementById('analyzeBtn').disabled=true;
+  document.getElementById('analysisOutput').style.display='none';
+  document.getElementById('loadingState').classList.add('show');
+  const steps=['Lendo estrutura da campanha...','Processando métricas...','Identificando padrões de ROAS e CPA...','Diagnosticando fase de aprendizado...','Gerando diagnóstico por criativo...','Criando briefs para o editor...','Montando redistribuição de budget...'];
+  let si=0;const iv=setInterval(()=>{if(si<steps.length)document.getElementById('loadingStep').textContent=steps[si++]},2000);
+  const learningLabel={learning:'EM APRENDIZADO — evitar mudanças bruscas',learning_limited:'APRENDIZADO LIMITADO — poucos eventos, considerar aumentar budget ou consolidar ad sets',active:'ATIVO — saiu do aprendizado, otimizações podem ser feitas normalmente'}[s.learningPhase];
+  let bgContext='';if(bgData){bgContext='\nDADOS BUYGOODS:\n'+JSON.stringify(bgData.bySubid||[]).slice(0,600)}
+  const isBidCap = s.bidStrategy === 'bid_cap';
+  const bidCapKnowledge = isBidCap ? `
+
+=== METODOLOGIA BID CAP — APLIQUE OBRIGATORIAMENTE ===
+
+MECÂNICA DO LEILÃO:
+Total Value = Bid x Estimated Action Rate x Ad Quality. Bid Cap é teto, não preço (second-price auction). Criativo ruim com Bid alto perde para criativo bom com Bid baixo. Filosofia central: CRIATIVO É O MOTOR (gera escala), BID CAP É O GOVERNADOR (limita risco). Budget é a carteira (estável e alto). Bid Cap é o throttle do leilão. NUNCA recomendar mexer no budget.
+
+MATEMÁTICA:
+Golden Bid = média dos CPAs lucrativos × (1 + buffer 20-30%). Ajustes SEMPRE em múltiplos fixos de 5-10% do Golden Bid, nunca percentuais livres. CAC real do tracking > CPA reportado pela Meta (divergem por perda de pixel, refunds, atribuição). ROAS AD do tracking > ROAS da plataforma. Decidir sempre pelo CAC e ROAS reais.
+
+TEMPO — REGRAS INEGOCIÁVEIS:
+1 dia = ruído (variância de leilão, composição de audiência, eventos externos, amostra pequena). Janelas: 3d (50%, presente) + 7d (30%, médio) + 30d (20%, contexto). Regra dos 3 dias: após qualquer ajuste de Bid, esperar MÍNIMO 3 dias antes de re-avaliar. Mudanças > 20% no Bid resetam o Learning Phase.
+
+SCORE E TIERS:
+Pontuar cada criativo com 5 sinais: CAC (25%) + ROAS AD (20%) + Profit (15%) + Spend% (20%) + CAC Trend (20%).
+- TIER S (80-100): ESCALAR, aumentar Bid +2 múltiplos
+- TIER A (60-79): AUMENTAR, +1 múltiplo
+- TIER B (40-59): HOLD — não mexer
+- TIER C (20-39): REDUZIR, -1 múltiplo
+- TIER D (0-19): CORTAR, -2 múltiplos ou pausar
+GUARDRAILS: ROAS < 1.30x = bloquear qualquer aumento independente do tier. CAC > breakeven por 2+ dias = freeze imediato.
+
+OS 5 CENÁRIOS CANÔNICOS — CLASSIFICAR CADA CRIATIVO:
+- CENÁRIO A: Spend% > 70% + ROAS < 1.3x → Queimando dinheiro → REDUZIR Bid -1 múltiplo. Não pausar, não mexer no budget.
+- CENÁRIO B: Spend% > 70% + ROAS > 1.5x → Premium ativo → MANTER com monitoramento (cuidado com B frágil: ROAS caindo + frequência subindo)
+- CENÁRIO C: Spend% 40-70% + ROAS bom → ESTADO-ALVO → HOLD ATIVO. Não mexer é a decisão certa.
+- CENÁRIO D: Spend% < 40% + ROAS bom → Subutilizado, oportunidade ignorada → AUMENTAR Bid +1 múltiplo
+- CENÁRIO E: Spend% baixo + ROAS baixo → Fadiga criativa → NÃO mexer no Bid, pausar criativo, acionar pipeline criativo. Mexer no Bid em Cenário E destrói dinheiro.
+ANTI-CENÁRIOS: alertar se padrão pode ser ruído de 1 dia, fim de semana, evento externo ou pulse pós-ajuste recente.
+
+TOP SPENDER — PROTEÇÃO ESPECIAL:
+Se algum criativo consome ≥ 15% do gasto total = é Top Spender, SINALIZAR EXPLICITAMENTE. Para recomendar pausar Top Spender, TODOS os 4 critérios precisam ser verdadeiros por 7+ dias consecutivos: (1) É Top Spender, (2) ROAS ≥ 30% pior que os pares, (3) Puxando perda absoluta relevante, (4) Persistência confirmada 7+ dias. NUNCA recomendar pausar Top Spender com 3-5 dias ruins — custo de pausar errado é 30x maior que esperar.
+
+QUANDO O PROBLEMA NÃO É BID:
+Se CTR caiu em todos os criativos → criativo, não Bid. Se conversão pós-clique caiu → landing page/checkout. Se pool inteiro está em Cenário A → mercado/audiência mudou, recalibrar Golden Bid. Se CAC não converge com ajustes → investigar tracking. Em 70% dos casos onde gestor inexperiente mexe no Bid, o problema estava em outro lugar.
+
+ERROS A IDENTIFICAR E ALERTAR NO RELATÓRIO:
+- Ajustes muito frequentes sem janela de 3 dias
+- Budget sendo usado como throttle (em vez do Bid)
+- Top Spender em risco de pausa prematura
+- Cenário E sendo tratado como Cenário A (mexendo no Bid de criativo morto)
+- Pool inteiro em Cenário A sem investigação da causa raiz
+` : '';
+
+  const prompt=`Você é gestor de tráfego sênior especializado em DRC no mercado americano, suplementos de saúde masculina. Você domina a metodologia completa de Bid Cap para Meta Ads em direct response high-ticket.
+
+OPERAÇÃO:
+- Produto: ${cfg.niche} | Público: ${cfg.audience}
+- Comissão: $${cfg.commission} | Rede: BuyGoods | Mercado: EUA
+
+ESTRUTURA DA CAMPANHA:
+- Tipo: ${s.type} (${s.type==='ABO'?'budget no ad set':'budget na campanha'})
+- Estratégia de Bid: ${s.bidStrategy}${s.bidCapVal?' — Bid Cap atual: $'+s.bidCapVal:''}
+- Objetivo: ${s.objective} | Rodando há: ${s.daysRunning} dias
+- Fase de aprendizado: ${learningLabel}
+- Budget diário: ${s.dailyBudget?'$'+s.dailyBudget:'não informado'} | Ad Sets ativos: ${s.numAdsets||'não informado'}
+- Compras no pixel (7d): ${s.pixelEvents||'não informado'}
+
+REGRAS DA OPERAÇÃO:
+- CPA aceitável: até $${maxCPA} | CPA limite (pausar): acima de $${limitCPA}
+- ROAS mínimo: ${minROAS}x | Frequência máxima: ${maxFreq}
+- CTR abaixo de 1%: hook fraco${bgContext}
+${bidCapKnowledge}
+DADOS META ADS:
+${data}
+
+Retorne SOMENTE JSON válido. SEM markdown, SEM blocos de código, SEM texto antes ou depois. Objeto JSON puro começando com { e terminando com }. campanha_diagnostico deve ser objeto {}, NÃO array []:
+
+{"campanha_diagnostico":{"status":"SAUDÁVEL ou ATENÇÃO ou CRÍTICO","fase_aprendizado_alerta":"string","principais_problemas":["string"],"pontos_positivos":["string"],"recomendacao_estrutura":"string"},"ranking":[{"criativo":"ID","status":"ESCALAR|MANTER|PAUSAR","roas":"val","cpp":"val","ctr":"val","frequencia":"val","diagnostico":"string","cenario":"A|B|C|D|E|N/A","tier":"S|A|B|C|D|N/A"}],"acoes":[{"prioridade":1,"titulo":"string","descricao":"string","impacto":"ALTO|MÉDIO|BAIXO"}],"briefs":[{"criativo":"ID","tipo":"REPLICAR|AJUSTAR|NOVO","titulo":"string","instrucoes":"string detalhado","urgencia":"ALTA|NORMAL"}],"budget":{"resumo":"string","recomendacoes":[{"acao":"AUMENTAR|REDUZIR|MANTER|PAUSAR","conjunto":"string","percentual":"string","motivo":"string","ajuste_bid":"string"}]}}`
+  try{
+    const tool = {
+      name: "analise_campanha",
+      description: "Retorna análise completa de campanha Meta Ads",
+      input_schema: {
+        type: "object",
+        properties: {
+          campanha_diagnostico: {
+            type: "object",
+            properties: {
+              status: { type: "string", enum: ["SAUDÁVEL","ATENÇÃO","CRÍTICO"] },
+              fase_aprendizado_alerta: { type: "string" },
+              principais_problemas: { type: "array", items: { type: "string" } },
+              pontos_positivos: { type: "array", items: { type: "string" } },
+              recomendacao_estrutura: { type: "string" }
+            },
+            required: ["status","fase_aprendizado_alerta","principais_problemas","pontos_positivos","recomendacao_estrutura"]
+          },
+          ranking: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                criativo: { type: "string" },
+                status: { type: "string", enum: ["ESCALAR","MANTER","PAUSAR"] },
+                roas: { type: "string" },
+                cpp: { type: "string" },
+                ctr: { type: "string" },
+                frequencia: { type: "string" },
+                diagnostico: { type: "string" }
+              },
+              required: ["criativo","status","roas","cpp","ctr","frequencia","diagnostico"]
+            }
+          },
+          acoes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                prioridade: { type: "number" },
+                titulo: { type: "string" },
+                descricao: { type: "string" },
+                impacto: { type: "string", enum: ["ALTO","MÉDIO","BAIXO"] }
+              },
+              required: ["prioridade","titulo","descricao","impacto"]
+            }
+          },
+          briefs: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                criativo: { type: "string" },
+                tipo: { type: "string", enum: ["REPLICAR","AJUSTAR","NOVO"] },
+                titulo: { type: "string" },
+                instrucoes: { type: "string" },
+                urgencia: { type: "string", enum: ["ALTA","NORMAL"] }
+              },
+              required: ["criativo","tipo","titulo","instrucoes","urgencia"]
+            }
+          },
+          budget: {
+            type: "object",
+            properties: {
+              resumo: { type: "string" },
+              recomendacoes: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    acao: { type: "string", enum: ["AUMENTAR","REDUZIR","MANTER","PAUSAR"] },
+                    conjunto: { type: "string" },
+                    percentual: { type: "string" },
+                    motivo: { type: "string" }
+                  },
+                  required: ["acao","conjunto","percentual","motivo"]
+                }
+              }
+            },
+            required: ["resumo","recomendacoes"]
+          }
+        },
+        required: ["campanha_diagnostico","ranking","acoes","briefs","budget"]
+      }
+    };
+
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,tools:[tool],tool_choice:{type:'tool',name:'analise_campanha'},messages:[{role:'user',content:prompt}]})});
+    clearInterval(iv);
+    const result=await res.json();
+    if(result.error)throw new Error(result.error.message);
+    const toolUse = result.content.find(b => b.type === 'tool_use');
+    if(!toolUse) throw new Error('Claude não retornou dados estruturados. Tente novamente.');
+    renderOutput(JSON.stringify(toolUse.input),maxCPA,limitCPA,minROAS);
+  }catch(err){clearInterval(iv);document.getElementById('loadingState').classList.remove('show');document.getElementById('analyzeBtn').disabled=false;showNotif('✕ Erro: '+err.message)}
+}
+function renderOutput(text,maxCPA,limitCPA,minROAS){
+  document.getElementById('loadingState').classList.remove('show');
+  document.getElementById('analyzeBtn').disabled=false;
+  let parsed;
+  try{
+    parsed = typeof text === 'object' ? text : JSON.parse(text);
+  }catch(e){
+    document.getElementById('campDiagContent').innerHTML='<pre style="white-space:pre-wrap;font-size:11px;font-family:IBM Plex Mono,monospace;color:var(--text2);line-height:1.7">Erro ao processar resposta: '+e.message+'</pre>';
+    document.getElementById('analysisOutput').style.display='block';
+    animateProg();
+    return;
+  }
+  // DIAGNÓSTICO
+  const diag=Array.isArray(parsed.campanha_diagnostico)?parsed.campanha_diagnostico[0]:(parsed.campanha_diagnostico||{});
+  const sc={SAUDÁVEL:'green',ATENÇÃO:'yellow',CRÍTICO:'red'}[diag.status]||'accent';
+  let diagHtml=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><span class="badge badge-${sc}"><span class="badge-dot"></span>${diag.status||'—'}</span></div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:12px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1.5px;margin-bottom:8px;">APRENDIZADO / ESTRUTURA</div><div style="font-size:13px;color:var(--text2);line-height:1.6;">${diag.fase_aprendizado_alerta||'—'}</div></div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:12px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1.5px;margin-bottom:8px;">RECOMENDAÇÃO DE ESTRUTURA</div><div style="font-size:13px;color:var(--text2);line-height:1.6;">${diag.recomendacao_estrutura||'—'}</div></div>`;
+  if(diag.principais_problemas?.length){diagHtml+=`<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--red);letter-spacing:1.5px;margin-bottom:8px;">PROBLEMAS</div>`;diag.principais_problemas.forEach(p=>{diagHtml+=`<div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:var(--red);margin-top:2px;">▸</span><span style="font-size:13px;color:var(--text2)">${p}</span></div>`})}
+  if(diag.pontos_positivos?.length){diagHtml+=`<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);letter-spacing:1.5px;margin:12px 0 8px;">PONTOS POSITIVOS</div>`;diag.pontos_positivos.forEach(p=>{diagHtml+=`<div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:var(--green);margin-top:2px;">▸</span><span style="font-size:13px;color:var(--text2)">${p}</span></div>`})}
+  document.getElementById('campDiagContent').innerHTML=diagHtml;
+  // RANKING
+  let rankHtml='';
+  const rankingData = Array.isArray(parsed.ranking) ? parsed.ranking : [];
+  rankingData.forEach((item,i)=>{
+    const sc2={ESCALAR:'badge-green',MANTER:'badge-yellow',PAUSAR:'badge-red'}[item.status]||'badge-accent';
+    const roas=parseFloat(item.roas)||0,cpp=parseFloat((item.cpp||'').replace(/[^0-9.]/g,''))||0,ctr=parseFloat((item.ctr||'').replace(/[^0-9.]/g,''))||0,freq=parseFloat((item.frequencia||'').replace(/[^0-9.]/g,''))||0;
+    const cenarioBadge = item.cenario && item.cenario !== 'N/A' ? `<span class="badge badge-accent" style="margin-top:3px;margin-left:4px;font-size:9px">CEN.${item.cenario}</span>` : '';
+    const tierBadge = item.tier && item.tier !== 'N/A' ? `<span class="badge badge-purple" style="margin-top:3px;margin-left:4px;font-size:9px">TIER ${item.tier}</span>` : '';
+    rankHtml+=`<div class="creative-row"><div class="creative-rank">${i+1}</div><div><div class="creative-id">${item.criativo}</div><div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px"><span class="badge ${sc2}"><span class="badge-dot"></span>${item.status}</span>${cenarioBadge}${tierBadge}</div></div><div class="creative-diag">${item.diagnostico}</div><div class="metric-pills"><div class="metric-pill"><span class="pill-label">ROAS</span><span class="pill-val ${roas>=minROAS?'g':'r'}">${item.roas}</span></div><div class="metric-pill"><span class="pill-label">CPP</span><span class="pill-val ${cpp<=maxCPA?'g':cpp<=limitCPA?'y':'r'}">${item.cpp}</span></div><div class="metric-pill"><span class="pill-label">CTR</span><span class="pill-val ${ctr>=1?'g':'r'}">${item.ctr}</span></div>${freq>0?`<div class="metric-pill"><span class="pill-label">FREQ</span><span class="pill-val ${freq<=3.5?'g':'r'}">${item.frequencia}</span></div>`:''}</div></div>`;
+  });
+  document.getElementById('rankingContent').innerHTML=rankHtml||'<p style="color:var(--text2);font-size:13px">Sem dados.</p>';
+  // end ranking
+  // AÇÕES
+  let actHtml='';
+  (parsed.acoes||[]).forEach(a=>{const cls={ALTO:'high',MÉDIO:'medium',BAIXO:'low'}[a.impacto]||'low',bc={ALTO:'badge-red',MÉDIO:'badge-yellow',BAIXO:'badge-accent'}[a.impacto]||'badge-accent';actHtml+=`<div class="action-item ${cls}"><div class="action-header"><div class="action-title">${a.prioridade}. ${a.titulo}</div><span class="badge ${bc}">${a.impacto}</span></div><div class="action-desc">${a.descricao}</div></div>`});
+  document.getElementById('actionsContent').innerHTML=actHtml||'<p style="color:var(--text2);font-size:13px">Sem ações.</p>';
+  // BRIEFS
+  let briefHtml='';
+  (parsed.briefs||[]).forEach(b=>{const uc=b.urgencia==='ALTA'?'badge-red':'badge-yellow',tc={REPLICAR:'badge-green',AJUSTAR:'badge-yellow',NOVO:'badge-purple'}[b.tipo]||'badge-accent';briefHtml+=`<div class="brief-card"><div class="brief-header"><span class="brief-id">${b.criativo}</span><div style="display:flex;gap:8px;"><span class="badge ${tc}">${b.tipo}</span><span class="badge ${uc}">URGÊNCIA ${b.urgencia}</span></div></div><div class="brief-body"><div class="brief-title-text">${b.titulo}</div><div class="brief-instructions">${b.instrucoes}</div></div></div>`});
+  document.getElementById('briefsContent').innerHTML=briefHtml||'<p style="color:var(--text2);font-size:13px">Sem briefs.</p>';
+  // BUDGET
+  let budgetHtml='';
+  if(parsed.budget){budgetHtml+=`<div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;">${parsed.budget.resumo}</div>`;(parsed.budget.recomendacoes||[]).forEach(r=>{const c={AUMENTAR:'var(--green)',REDUZIR:'var(--red)',PAUSAR:'var(--red)',MANTER:'var(--yellow)'}[r.acao]||'var(--text2)';budgetHtml+=`<div class="budget-row"><div class="budget-pct" style="color:${c}">${r.percentual}</div><div class="budget-info"><div class="budget-name">${r.conjunto}</div><div class="budget-reason"><span style="color:${c};font-weight:700">${r.acao}</span> — ${r.motivo}</div></div></div>`})}
+  document.getElementById('budgetContent').innerHTML=budgetHtml||'<p style="color:var(--text2);font-size:13px">Sem recomendações.</p>';
+  document.getElementById('analysisOutput').style.display='block';
+  animateProg();showNotif('✓ Análise concluída!');
+}
+function animateProg(){setTimeout(()=>document.getElementById('progressFill').style.width='100%',100)}
+function clearAll(){document.getElementById('campaignData').value='';document.getElementById('analysisOutput').style.display='none';document.getElementById('progressFill').style.width='0%'}
+// BUYGOODS
+async function fetchBuyGoods(){
+  const apiKey=document.getElementById('bgApiKey').value.trim(),affId=document.getElementById('bgAffId').value.trim(),dateFrom=document.getElementById('bgDateFrom').value,dateTo=document.getElementById('bgDateTo').value;
+  if(!apiKey||!affId){showNotif('⚠ Preencha API Key e Afiliado ID');return}
+  document.getElementById('bgOutput').style.display='none';document.getElementById('bgLoading').classList.add('show');
+  const steps=['Conectando à API BuyGoods...','Buscando vendas por dia...','Buscando por hora...','Buscando por subID...','Buscando comissões...'];
+  let si=0;const iv=setInterval(()=>{if(si<steps.length)document.getElementById('bgLoadingStep').textContent=steps[si++]},1200);
+  try{
+    const base='https://www.buygoods.com/api/v2',headers={'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'};
+    const params=`?affiliate_id=${affId}&date_from=${dateFrom}&date_to=${dateTo}`;
+    const endpoints=['sales/by-day','sales/by-hour','sales/by-subid','commissions'];
+    const results={};
+    for(const ep of endpoints){try{const r=await fetch(`${base}/${ep}${params}`,{headers,mode:'cors'});results[ep.split('/').pop()]=r.ok?await r.json():null}catch{results[ep.split('/').pop()]=null}}
+    clearInterval(iv);
+    bgData={byDay:results['by-day'],byHour:results['by-hour'],bySubid:results['by-subid'],commissions:results['commissions']};
+    if(!bgData.byDay&&!bgData.bySubid)throw new Error('Não foi possível conectar. Verifique as credenciais.');
+    renderBGOutput(bgData);
+  }catch(err){clearInterval(iv);document.getElementById('bgLoading').classList.remove('show');showNotif('✕ Erro: '+err.message)}
+}
+function loadBGSample(){
+  bgData={byDay:[{date:'2025-04-29',sales:18,commissions:3600},{date:'2025-04-30',sales:22,commissions:4400},{date:'2025-05-01',sales:15,commissions:3000},{date:'2025-05-02',sales:31,commissions:6200},{date:'2025-05-03',sales:27,commissions:5400},{date:'2025-05-04',sales:19,commissions:3800},{date:'2025-05-05',sales:24,commissions:4800}],byHour:Array.from({length:24},(_,h)=>({hour:h,sales:Math.floor(Math.random()*6+(h>=9&&h<=21?3:0))})),bySubid:[{subid:'VD239',sales:14,commissions:2800,cpa:5.43},{subid:'VD169',sales:31,commissions:6200,cpa:18.01},{subid:'VD141',sales:89,commissions:17800,cpa:58.90},{subid:'VD244',sales:6,commissions:1200,cpa:10.27},{subid:'VD189',sales:4,commissions:800,cpa:70.60},{subid:'VD236',sales:8,commissions:1600,cpa:57.14},{subid:'VD240',sales:2,commissions:400,cpa:41.88}],commissions:{total:30800,pending:12400,paid:18400}};
+  renderBGOutput(bgData);showNotif('✓ Dados de exemplo BuyGoods carregados');
+}
+function renderBGOutput(data){
+  document.getElementById('bgLoading').classList.remove('show');
+  const totalSales=(data.byDay||[]).reduce((a,b)=>a+(b.sales||0),0);
+  const totalComm=data.commissions?.total||(data.byDay||[]).reduce((a,b)=>a+(b.commissions||0),0);
+  const avgCPA=data.bySubid?(data.bySubid.reduce((a,b)=>a+(b.cpa||0),0)/(data.bySubid.length||1)).toFixed(2):'—';
+  document.getElementById('bgStatsGrid').innerHTML=`<div class="bg-stat"><div class="bg-stat-label">Vendas no Período</div><div class="bg-stat-val">${totalSales}</div></div><div class="bg-stat"><div class="bg-stat-label">Comissões Totais</div><div class="bg-stat-val">$${totalComm.toLocaleString('en-US')}</div></div><div class="bg-stat"><div class="bg-stat-label">CPA Médio Real</div><div class="bg-stat-val">$${avgCPA}</div></div>`;
+  let subHtml='<thead><tr><th>SubID / Criativo</th><th>Vendas</th><th>Comissão</th><th>CPA Real</th></tr></thead><tbody>';
+  (data.bySubid||[]).forEach(r=>{const c=r.cpa<80?'var(--green)':r.cpa<120?'var(--yellow)':'var(--red)';subHtml+=`<tr><td style="color:var(--accent);font-weight:700">${r.subid}</td><td>${r.sales}</td><td style="color:var(--green)">$${(r.commissions||0).toFixed(0)}</td><td style="color:${c};font-weight:700">$${(r.cpa||0).toFixed(2)}</td></tr>`});
+  subHtml+='</tbody>';document.getElementById('subidTable').innerHTML=subHtml;
+  const maxD=Math.max(...(data.byDay||[{sales:1}]).map(d=>d.sales));
+  document.getElementById('dayChart').innerHTML=(data.byDay||[]).map(d=>`<div class="bar-row"><div class="bar-label">${d.date?.slice(5)||'—'}</div><div class="bar-track"><div class="bar-fill" style="width:${maxD>0?d.sales/maxD*100:0}%;background:var(--accent)"></div></div><div class="bar-val">${d.sales} vendas</div></div>`).join('');
+  const maxH=Math.max(...(data.byHour||[{sales:1}]).map(h=>h.sales));
+  document.getElementById('hourChart').innerHTML=(data.byHour||[]).map(h=>`<div class="bar-row"><div class="bar-label">${String(h.hour).padStart(2,'0')}h</div><div class="bar-track"><div class="bar-fill" style="width:${maxH>0?h.sales/maxH*100:0}%;background:var(--purple)"></div></div><div class="bar-val">${h.sales} vend.</div></div>`).join('');
+  document.getElementById('bgOutput').style.display='block';showNotif('✓ Dados BuyGoods carregados');
+}
+function switchBGTab(name,el){['subid','day','hour'].forEach(t=>{const p=document.getElementById('bg'+t.charAt(0).toUpperCase()+t.slice(1)+'Panel');if(p)p.style.display=t===name?'':'none'});document.querySelectorAll('.inline-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+async function runCrossAnalysis(){
+  if(!bgData){showNotif('⚠ Carregue os dados BuyGoods primeiro');return}
+  const apiKey=localStorage.getItem('ab2_key');if(!apiKey){showNotif('⚠ Configure sua API Key');return}
+  document.getElementById('crossContent').innerHTML='<div class="loading-overlay show" style="padding:30px"><div class="loader"></div><div class="loading-msg">Claude analisando cruzamento...</div></div>';
+  try{
+    const prompt=`Especialista em análise de dados de marketing direto. Analise esses dados BuyGoods:
+
+Vendas por SubID: ${JSON.stringify(bgData.bySubid||[])}
+Vendas por dia: ${JSON.stringify(bgData.byDay||[])}
+Vendas por hora: ${JSON.stringify(bgData.byHour||[])}
+
+Responda em português com:
+1. Quais criativos (SubIDs) têm melhor CPA real?
+2. Discrepâncias de atribuição Meta vs BuyGoods
+3. Melhores dias e horários para veicular anúncios
+4. Criativos com bom CTR no Meta mas CPA ruim no BuyGoods — possíveis causas`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const result=await res.json();if(result.error)throw new Error(result.error.message);
+    const crossText = result.content.find(b=>b.type==='text')?.text || result.content[0]?.text || '';
+    document.getElementById('crossContent').innerHTML=`<div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;">${crossText}</div>`;
+    showNotif('✓ Cruzamento concluído');
+  }catch(err){document.getElementById('crossContent').innerHTML=`<p style="color:var(--red);font-size:13px">Erro: ${err.message}</p>`}
+}
+function copyEl(id){navigator.clipboard.writeText(document.getElementById(id).innerText);showNotif('✓ Copiado!')}
+function copyFullReport(){const ids=['campDiagContent','rankingContent','actionsContent','briefsContent','budgetContent'];navigator.clipboard.writeText(ids.map(id=>document.getElementById(id)?.innerText||'').join('\n\n---\n\n'));showNotif('✓ Relatório completo copiado!')}
+function copyCode(){navigator.clipboard.writeText(document.getElementById('pythonCode').textContent);showNotif('✓ Código copiado!')}
+function showNotif(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),2500)}
+function renderPythonCode(){document.getElementById('pythonCode').textContent=`import os, json, requests, schedule, time
+from datetime import datetime, timedelta
+import anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+
+CLAUDE_KEY = os.getenv("ANTHROPIC_API_KEY")
+META_TOKEN = os.getenv("META_ACCESS_TOKEN")
+AD_ACCOUNT = os.getenv("META_AD_ACCOUNT")   # act_XXXXXX
+BG_API_KEY = os.getenv("BUYGOODS_API_KEY")
+BG_AFF_ID  = os.getenv("BUYGOODS_AFF_ID")
+
+NICHE      = "Suplemento para saúde da próstata"
+AUDIENCE   = "Homens 45-70 anos, EUA"
+COMMISSION = 200
+MAX_CPA    = 80
+LIMIT_CPA  = 120
+MIN_ROAS   = 2.5
+
+def fetch_meta(preset="last_7d"):
+    r = requests.get(f"https://graph.facebook.com/v19.0/{AD_ACCOUNT}/ads", params={
+        "fields": "name,spend,impressions,clicks,actions,ctr,cpp,frequency",
+        "date_preset": preset, "access_token": META_TOKEN, "limit": 50
+    })
+    r.raise_for_status()
+    return r.json().get("data", [])
+
+def format_meta(ads):
+    lines = ["Criativo | Gasto | Compras | CPP | ROAS | CTR | Freq"]
+    for ad in ads:
+        spend = float(ad.get("spend", 0))
+        purchases = next((int(a["value"]) for a in (ad.get("actions") or [])
+                         if a["action_type"] == "purchase"), 0)
+        roas = (purchases * COMMISSION) / spend if spend > 0 else 0
+        lines.append(f"{ad['name']} | \${spend:.2f} | {purchases} | \${float(ad.get('cpp',0)):.2f} | {roas:.2f}x | {float(ad.get('ctr',0)):.2f}% | {float(ad.get('frequency',0)):.1f}")
+    return "\\n".join(lines)
+
+def fetch_buygoods(date_from, date_to):
+    base    = "https://www.buygoods.com/api/v2"
+    headers = {"Authorization": f"Bearer {BG_API_KEY}"}
+    params  = {"affiliate_id": BG_AFF_ID, "date_from": date_from, "date_to": date_to}
+    results = {}
+    for ep in ["sales/by-day", "sales/by-hour", "sales/by-subid", "commissions"]:
+        try:
+            r = requests.get(f"{base}/{ep}", headers=headers, params=params, timeout=10)
+            results[ep.split("/")[-1]] = r.json() if r.ok else None
+        except Exception as e:
+            results[ep.split("/")[-1]] = None
+    return results
+
+def analyze(meta_data, bg_data, struct=None):
+    client = anthropic.Anthropic(api_key=CLAUDE_KEY)
+    bg_ctx = f"\\nBUYGOODS SubID: {json.dumps(bg_data.get('by-subid') or [])[:600]}" if bg_data else ""
+    struct_ctx = ""
+    if struct:
+        struct_ctx = f"""
+ESTRUTURA: {struct.get('type','ABO')} | Bid: {struct.get('bid','lowest_cost')}
+Rodando: {struct.get('days','?')}d | Fase: {struct.get('phase','learning')}
+Budget/dia: \${struct.get('budget','?')} | Ad Sets: {struct.get('adsets','?')} | Pixel purchases: {struct.get('pixel_events','?')}"""
+    msg = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=4000,
+        messages=[{"role": "user", "content": f"""Gestor DRC no mercado americano, suplementos masculinos.
+OPERAÇÃO: {NICHE} | {AUDIENCE} | Comissão \${COMMISSION}
+CPA ok: \${MAX_CPA} | Pausar: \${LIMIT_CPA} | ROAS min: {MIN_ROAS}x{struct_ctx}
+META ADS:\\n{meta_data}{bg_ctx}
+Retorne JSON: campanha_diagnostico, ranking, acoes, briefs, budget."""}]
+    )
+    return json.loads(msg.content[0].text.replace("\`\`\`json","").replace("\`\`\`","").strip())
+
+def format_report(a):
+    d = a.get("campanha_diagnostico", {})
+    r = f"\\n{'='*50}\\nADBRAIN v2 — {datetime.now().strftime('%d/%m/%Y %H:%M')}\\n{'='*50}\\n"
+    r += f"\\nCAMPANHA: {d.get('status','—')}\\n{d.get('fase_aprendizado_alerta','—')}\\n"
+    r += f"ESTRUTURA: {d.get('recomendacao_estrutura','—')}\\n"
+    r += "\\n📊 RANKING\\n"
+    for i, c in enumerate(a.get("ranking", []), 1):
+        icon = "✅" if c["status"]=="ESCALAR" else "⏸️" if c["status"]=="PAUSAR" else "⚠️"
+        r += f"{i}. {icon} {c['criativo']} | ROAS {c['roas']} | CPP {c['cpp']} | {c['diagnostico']}\\n"
+    r += "\\n🎯 AÇÕES\\n"
+    for a2 in a.get("acoes", []):
+        r += f"\\n{a2['prioridade']}. [{a2['impacto']}] {a2['titulo']}\\n   {a2['descricao']}\\n"
+    return r
+
+def run():
+    print(f"\\n[{datetime.now()}] Iniciando análise...")
+    date_to   = datetime.now().strftime("%Y-%m-%d")
+    date_from = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    try:
+        meta_fmt = format_meta(fetch_meta("last_7d"))
+        bg       = fetch_buygoods(date_from, date_to)
+        analysis = analyze(meta_fmt, bg)
+        report   = format_report(analysis)
+        print(report)
+        with open(f"report_{datetime.now().strftime('%Y%m%d')}.txt", "w") as f:
+            f.write(report)
+        print("✓ Relatório salvo!")
+    except Exception as e:
+        print(f"✕ Erro: {e}")
+
+if __name__ == "__main__":
+    run()
+    schedule.every().monday.at("09:00").do(run)
+    while True:
+        schedule.run_pending()
+        time.sleep(60)`}
+
+// ===================== OVERVIEW =====================
+let ovChartData = null;
+let perfChartInst = null;
+
+function loadOverviewSample() {
+  const dates = ['08/05','09/05','10/05','11/05','12/05','13/05','14/05'];
+  const revenue = [92000,115000,108000,130000,145000,138000,195000];
+  const spend   = [11000,14000,13500,16000,18000,17000,24000];
+  ovChartData = {
+    kpis: { spend:184752, revenue:1482930, roas:8.03, conversions:4862, cpa:37.97,
+            spendChg:-4.2, revenueChg:8.3, roasChg:12.1, convChg:15.4, cpaChg:-6.3 },
+    chart: { dates, revenue, spend },
+    channels: [{label:'Meta',pct:62.1,color:'#00e5ff'},{label:'Google',pct:21.1,color:'#7a94a8'},{label:'YouTube',pct:8.8,color:'#445566'},{label:'Outros',pct:6.0,color:'#2a3d4f'}],
+    devices: [{label:'📱 Mobile',pct:71.4},{label:'🖥️ Desktop',pct:22.7},{label:'📟 Tablet',pct:4.9}],
+    campaigns: [
+      {name:'FUNIL ESCALA 6.0',status:'Ativa',spend:67281,revenue:543112,roas:8.60,cpa:31.17,conv:1742},
+      {name:'FUNIL LANÇAMENTO 02',status:'Ativa',spend:45589,revenue:371981,roas:8.10,cpa:28.32,conv:1216},
+      {name:'RETENÇÃO ALUNOS',status:'Ativa',spend:23112,revenue:181376,roas:7.85,cpa:28.21,conv:647},
+      {name:'COLD — LOOKALIKE',status:'Ativa',spend:31097,revenue:198604,roas:6.39,cpa:33.80,conv:502}
+    ]
+  };
+  renderOverview(ovChartData);
+  showNotif('✓ Dados de exemplo carregados');
+}
+
+async function fetchOverviewData() {
+  const token = localStorage.getItem('ab2_meta_token') || prompt('Meta Access Token:');
+  const account = localStorage.getItem('ab2_meta_account') || prompt('Ad Account ID (act_XXXXX):');
+  if (!token || !account) { showNotif('⚠ Token ou Account ID não informados'); return; }
+  localStorage.setItem('ab2_meta_token', token);
+  localStorage.setItem('ab2_meta_account', account);
+  const preset = document.getElementById('overviewPreset').value;
+  showNotif('🔄 Buscando dados da Meta API...');
+  try {
+    const fields = 'spend,impressions,clicks,actions,cost_per_action_type,ctr,cpm';
+    const url = `https://graph.facebook.com/v19.0/${account}/campaigns?fields=name,status,insights{${fields}}&date_preset=${preset}&access_token=${token}&limit=20`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const camps = (data.data || []).map(c => {
+      const ins = c.insights?.data?.[0] || {};
+      const spend = parseFloat(ins.spend || 0);
+      const purchases = (ins.actions || []).find(a => a.action_type === 'purchase');
+      const conv = parseInt(purchases?.value || 0);
+      const revenue = conv * parseFloat(cfg.commission);
+      const roas = spend > 0 ? revenue / spend : 0;
+      const cpa = conv > 0 ? spend / conv : 0;
+      return { name: c.name, status: c.status === 'ACTIVE' ? 'Ativa' : 'Pausada', spend, revenue, roas, cpa, conv };
+    });
+    const totSpend = camps.reduce((a,b)=>a+b.spend,0);
+    const totRev = camps.reduce((a,b)=>a+b.revenue,0);
+    const totConv = camps.reduce((a,b)=>a+b.conv,0);
+    ovChartData = {
+      kpis: { spend:totSpend, revenue:totRev, roas:totSpend>0?totRev/totSpend:0, conversions:totConv, cpa:totConv>0?totSpend/totConv:0, spendChg:0, revenueChg:0, roasChg:0, convChg:0, cpaChg:0 },
+      chart: { dates:[], revenue:[], spend:[] },
+      channels: [{label:'Meta',pct:100,color:'#00e5ff'}],
+      devices: [],
+      campaigns: camps
+    };
+    renderOverview(ovChartData);
+    showNotif('✓ Dados Meta carregados!');
+  } catch(err) { showNotif('✕ Erro Meta: ' + err.message); }
+}
+
+function renderOverview(d) {
+  const fmt = v => '$' + (v >= 1000000 ? (v/1000000).toFixed(2)+'M' : v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0));
+  const chg = (v, id) => {
+    const el = document.getElementById(id); if(!el) return;
+    const up = v > 0;
+    el.textContent = (up ? '↑ ' : '↓ ') + Math.abs(v).toFixed(1) + '%';
+    el.className = 'ov-kpi-change ' + (up ? 'up' : 'down');
+  };
+  const k = d.kpis;
+  document.getElementById('ovSpend').textContent = fmt(k.spend);
+  document.getElementById('ovRevenue').textContent = fmt(k.revenue);
+  document.getElementById('ovRoas').textContent = k.roas.toFixed(2);
+  document.getElementById('ovConv').textContent = k.conversions.toLocaleString('en-US');
+  document.getElementById('ovCpa').textContent = '$' + k.cpa.toFixed(2);
+  chg(k.spendChg,'ovSpendChg'); chg(k.revenueChg,'ovRevenueChg'); chg(k.roasChg,'ovRoasChg'); chg(k.convChg,'ovConvChg');
+  const cpaChgEl = document.getElementById('ovCpaChg');
+  if(cpaChgEl){ cpaChgEl.textContent = (k.cpaChg<0?'↓ ':'↑ ') + Math.abs(k.cpaChg).toFixed(1)+'%'; cpaChgEl.className='ov-kpi-change '+(k.cpaChg<0?'up':'down'); }
+
+  // LINE CHART via canvas
+  drawLineChart(d.chart);
+
+  // DONUT
+  drawDonut(d.channels);
+
+  // DEVICES
+  const devEl = document.getElementById('devicesChart');
+  devEl.innerHTML = d.devices.map(dv => `<div class="bar-row"><div class="bar-label" style="width:90px">${dv.label}</div><div class="bar-track"><div class="bar-fill" style="width:${dv.pct}%;background:var(--accent)"></div></div><div class="bar-val">${dv.pct}%</div></div>`).join('');
+
+  // CAMPAIGNS TABLE
+  const tbody = document.getElementById('ovCampsBody');
+  tbody.innerHTML = d.campaigns.map(c => {
+    const rc = c.roas >= 3 ? 'var(--green)' : c.roas >= 2 ? 'var(--yellow)' : 'var(--red)';
+    const cc = c.cpa <= 80 ? 'var(--green)' : c.cpa <= 120 ? 'var(--yellow)' : 'var(--red)';
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)">${c.name}</td>
+      <td><span class="badge badge-green"><span class="badge-dot"></span>${c.status}</span></td>
+      <td>$${(c.spend).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td style="color:var(--green)">$${(c.revenue).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td style="color:${rc};font-weight:700;font-family:'IBM Plex Mono',monospace">${c.roas.toFixed(2)}</td>
+      <td style="color:${cc};font-family:'IBM Plex Mono',monospace">$${c.cpa.toFixed(2)}</td>
+      <td style="font-family:'IBM Plex Mono',monospace">${c.conv.toLocaleString('en-US')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function drawLineChart(data) {
+  const canvas = document.getElementById('perfChart');
+  if (!canvas || !data.dates || !data.dates.length) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr; canvas.height = 200 * dpr;
+  canvas.style.width = rect.width + 'px'; canvas.style.height = '200px';
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = 200;
+  const pad = { top:20, right:16, bottom:36, left:52 };
+  const cW = W - pad.left - pad.right, cH = H - pad.top - pad.bottom;
+  ctx.clearRect(0,0,W,H);
+  const allVals = [...data.revenue, ...data.spend];
+  const maxV = Math.max(...allVals) * 1.1;
+  const n = data.dates.length;
+  const xPos = i => pad.left + (i / (n-1)) * cW;
+  const yPos = v => pad.top + cH - (v / maxV) * cH;
+  // Grid lines
+  ctx.strokeStyle = 'rgba(31,45,58,0.8)'; ctx.lineWidth = 1;
+  [0,0.25,0.5,0.75,1].forEach(t => {
+    const y = pad.top + t * cH;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke();
+    const val = maxV * (1 - t);
+    ctx.fillStyle = '#445566'; ctx.font = '10px IBM Plex Mono, monospace'; ctx.textAlign = 'right';
+    ctx.fillText(val >= 1000 ? (val/1000).toFixed(0)+'K' : val.toFixed(0), pad.left - 6, y + 4);
+  });
+  // X labels
+  ctx.fillStyle = '#445566'; ctx.font = '10px IBM Plex Mono, monospace'; ctx.textAlign = 'center';
+  data.dates.forEach((d,i) => ctx.fillText(d, xPos(i), H - 8));
+  // Draw line helper
+  const drawLine = (vals, color, gTop, gBot) => {
+    ctx.beginPath();
+    vals.forEach((v,i) => i === 0 ? ctx.moveTo(xPos(i), yPos(v)) : ctx.lineTo(xPos(i), yPos(v)));
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+    grad.addColorStop(0, gTop); grad.addColorStop(1, gBot);
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.lineTo(xPos(vals.length-1), pad.top + cH); ctx.lineTo(xPos(0), pad.top + cH); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    vals.forEach((v,i) => { ctx.beginPath(); ctx.arc(xPos(i), yPos(v), 3, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill(); });
+  };
+  drawLine(data.revenue, '#00e5ff', 'rgba(0,229,255,0.15)', 'rgba(0,229,255,0)');
+  drawLine(data.spend, '#445566', 'rgba(68,85,102,0.1)', 'rgba(68,85,102,0)');
+}
+
+function drawDonut(channels) {
+  const canvas = document.getElementById('donutChart');
+  if (!canvas) return;
+  canvas.width = 100; canvas.height = 100;
+  const ctx = canvas.getContext('2d');
+  const cx = 50, cy = 50, r = 38, inner = 24;
+  let start = -Math.PI / 2;
+  channels.forEach(ch => {
+    const angle = (ch.pct / 100) * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start + angle);
+    ctx.closePath(); ctx.fillStyle = ch.color; ctx.fill();
+    start += angle;
+  });
+  ctx.beginPath(); ctx.arc(cx, cy, inner, 0, Math.PI * 2);
+  ctx.fillStyle = '#0e1318'; ctx.fill();
+  const leg = document.getElementById('donutLegend');
+  leg.innerHTML = channels.map(ch => `<div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:${ch.color};display:inline-block;flex-shrink:0"></span><span style="color:var(--text2)">${ch.label}</span></div><span style="color:var(--text)">${ch.pct}%</span></div>`).join('');
+}
+
+// ===================== META API — CONNECT + SELECT + FETCH =====================
+let metaToken = '';
+let metaAccounts = [];
+let metaCampaigns = [];
+
+async function metaConnect() {
+  const tokenInput = document.getElementById('metaToken').value.trim();
+  if (!tokenInput) { showNotif('⚠ Cole seu Meta Access Token'); return; }
+  metaToken = tokenInput;
+  localStorage.setItem('ab2_meta_token', metaToken);
+
+  const btn = document.getElementById('metaConnectBtn');
+  const status = document.getElementById('metaConnectStatus');
+  btn.disabled = true; btn.textContent = '⏳ Conectando...';
+  status.textContent = ''; status.style.color = 'var(--text3)';
+
+  try {
+    // Fetch all ad accounts the token has access to
+    const url = 'https://graph.facebook.com/v19.0/me/adaccounts?fields=name,account_id,currency,account_status&limit=50&access_token=' + metaToken;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    metaAccounts = data.data || [];
+    if (!metaAccounts.length) throw new Error('Nenhuma conta de anúncios encontrada para esse token.');
+
+    // Populate account selector
+    const sel = document.getElementById('metaAccountSel');
+    sel.innerHTML = '<option value="">Selecione a conta...</option>';
+    metaAccounts.forEach(acc => {
+      const opt = document.createElement('option');
+      opt.value = acc.id;
+      opt.textContent = acc.name + ' (' + acc.id + ')';
+      sel.appendChild(opt);
+    });
+
+    // If only one account, auto-select it
+    if (metaAccounts.length === 1) {
+      sel.value = metaAccounts[0].id;
+      metaLoadCampaigns();
+    }
+
+    document.getElementById('metaSelectors').style.display = 'block';
+    status.textContent = '✓ ' + metaAccounts.length + ' conta(s) encontrada(s)';
+    status.style.color = 'var(--green)';
+    btn.textContent = '✓ Conectado';
+    setApiStatus(true);
+    showNotif('✓ Meta conectada — selecione a conta');
+
+  } catch(err) {
+    status.textContent = '✕ ' + err.message;
+    status.style.color = 'var(--red)';
+    btn.disabled = false; btn.textContent = '🔌 Conectar';
+    showNotif('✕ ' + err.message);
+  }
+}
+
+async function metaLoadCampaigns() {
+  const accountId = document.getElementById('metaAccountSel').value;
+  if (!accountId) return;
+  localStorage.setItem('ab2_meta_account', accountId);
+
+  const campSel = document.getElementById('metaCampaignSel');
+  campSel.innerHTML = '<option value="">Carregando campanhas...</option>';
+  document.getElementById('metaLoadBtn').disabled = true;
+  document.getElementById('metaCampInfo').style.display = 'none';
+
+  try {
+    const fields = 'name,status,objective,buying_type,daily_budget,lifetime_budget,created_time,bid_strategy';
+    const url = 'https://graph.facebook.com/v19.0/' + accountId + '/campaigns?fields=' + fields + '&limit=50&access_token=' + metaToken;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    metaCampaigns = (data.data || []).filter(c => c.status !== 'DELETED');
+    campSel.innerHTML = '<option value="">Selecione a campanha...</option>';
+    metaCampaigns.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      const status = c.status === 'ACTIVE' ? '🟢' : '⏸️';
+      opt.textContent = status + ' ' + c.name;
+      campSel.appendChild(opt);
+    });
+
+    showNotif('✓ ' + metaCampaigns.length + ' campanhas carregadas');
+  } catch(err) {
+    campSel.innerHTML = '<option value="">Erro ao carregar campanhas</option>';
+    showNotif('✕ ' + err.message);
+  }
+}
+
+let metaAdsets = [];
+
+function metaCampaignSelected() {
+  const campId = document.getElementById('metaCampaignSel').value;
+  if (!campId) { document.getElementById('metaLoadBtn').disabled = true; return; }
+
+  const camp = metaCampaigns.find(c => c.id === campId);
+  if (!camp) return;
+
+  // Show campaign info strip
+  const info = document.getElementById('metaCampInfo');
+  const budget = camp.daily_budget ? '$' + (parseFloat(camp.daily_budget)/100).toFixed(0) + '/dia' : camp.lifetime_budget ? '$' + (parseFloat(camp.lifetime_budget)/100).toFixed(0) + ' total' : '—';
+  const isCBO = camp.buying_type === 'AUCTION' && camp.daily_budget;
+  const daysRunning = camp.created_time ? Math.floor((Date.now() - new Date(camp.created_time)) / 86400000) : '?';
+  const bidLabel = {LOWEST_COST_WITHOUT_CAP:'Lowest Cost',LOWEST_COST_WITH_BID_CAP:'Bid Cap',COST_CAP:'Cost Cap',LOWEST_COST_WITH_MIN_ROAS:'Min ROAS'}[camp.bid_strategy] || camp.bid_strategy || '—';
+
+  info.innerHTML =
+    '<span><span style="color:var(--text3)">TIPO</span> <span style="color:var(--accent);margin-left:4px">' + (isCBO ? 'CBO' : 'ABO') + '</span></span>' +
+    '<span><span style="color:var(--text3)">BID</span> <span style="color:var(--accent);margin-left:4px">' + bidLabel + '</span></span>' +
+    '<span><span style="color:var(--text3)">BUDGET</span> <span style="color:var(--accent);margin-left:4px">' + budget + '</span></span>' +
+    '<span><span style="color:var(--text3)">DIAS</span> <span style="color:var(--accent);margin-left:4px">' + daysRunning + '</span></span>' +
+    '<span><span style="color:var(--text3)">OBJETIVO</span> <span style="color:var(--accent);margin-left:4px">' + (camp.objective || '—') + '</span></span>';
+  info.style.display = 'flex';
+  const se = document.getElementById('structEmptyState'); if(se) se.style.display='none';
+
+  // Auto-fill structure fields
+  if (camp.daily_budget) document.getElementById('dailyBudget').value = (parseFloat(camp.daily_budget)/100).toFixed(0);
+  if (daysRunning && daysRunning !== '?') document.getElementById('daysRunning').value = daysRunning;
+  if (isCBO) document.getElementById('campType').value = 'CBO';
+  if (camp.bid_strategy === 'LOWEST_COST_WITH_BID_CAP') document.getElementById('bidStrategy').value = 'bid_cap';
+  else if (camp.bid_strategy === 'COST_CAP') document.getElementById('bidStrategy').value = 'cost_cap';
+  else document.getElementById('bidStrategy').value = 'lowest_cost';
+
+  // Load adsets for this campaign
+  loadAdsets(campId);
+  document.getElementById('metaLoadBtn').disabled = false;
+}
+
+async function loadAdsets(campId) {
+  const adsetSel = document.getElementById('metaAdsetSel');
+  adsetSel.innerHTML = '<option value="">Carregando conjuntos...</option>';
+  adsetSel.disabled = true;
+
+  try {
+    const fields = 'name,status,daily_budget,bid_amount,bid_strategy,targeting';
+    const url = 'https://graph.facebook.com/v19.0/' + campId + '/adsets?fields=' + fields + '&limit=50&access_token=' + metaToken;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    metaAdsets = (data.data || []).filter(a => a.status !== 'DELETED');
+    adsetSel.innerHTML = '<option value="">Todos os conjuntos (' + metaAdsets.length + ')</option>';
+    metaAdsets.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      const icon = a.status === 'ACTIVE' ? '🟢' : '⏸️';
+      const budget = a.daily_budget ? ' · $' + (parseFloat(a.daily_budget)/100).toFixed(0) + '/d' : '';
+      opt.textContent = icon + ' ' + a.name + budget;
+      adsetSel.appendChild(opt);
+    });
+    adsetSel.disabled = false;
+    showNotif('✓ ' + metaAdsets.length + ' conjuntos carregados');
+  } catch(err) {
+    adsetSel.innerHTML = '<option value="">Erro ao carregar conjuntos</option>';
+    adsetSel.disabled = false;
+  }
+}
+
+function metaAdsetSelected() {
+  const adsetId = document.getElementById('metaAdsetSel').value;
+  const adset = metaAdsets.find(a => a.id === adsetId);
+  if (!adset) return;
+
+  // Auto-fill bid cap if adset has it
+  if (adset.bid_amount) {
+    document.getElementById('bidCapVal').value = (parseFloat(adset.bid_amount)/100).toFixed(0);
+  }
+  if (adset.daily_budget) {
+    document.getElementById('dailyBudget').value = (parseFloat(adset.daily_budget)/100).toFixed(0);
+  }
+}
+
+async function fetchMetaCreatives() {
+  const accountId = document.getElementById('metaAccountSel').value || localStorage.getItem('ab2_meta_account');
+  const campId = document.getElementById('metaCampaignSel').value;
+  const preset = document.getElementById('metaPreset').value;
+  const status = document.getElementById('metaFetchStatus');
+  const commission = parseFloat(cfg.commission) || 200;
+
+  if (!metaToken) { showNotif('⚠ Conecte o token primeiro'); return; }
+  if (!accountId) { showNotif('⚠ Selecione a conta de anúncios'); return; }
+
+  document.getElementById('metaLoadBtn').disabled = true;
+  status.textContent = '⏳ Buscando anúncios...';
+  status.style.color = 'var(--accent)';
+
+  try {
+    // Build URL — filter by campaign if selected
+    const insightFields = 'spend,impressions,clicks,ctr,cpm,cpp,frequency,actions,cost_per_action_type,video_30_sec_watched_actions,video_p50_watched_actions,video_p75_watched_actions';
+    const adFields = 'name,status,insights.date_preset(' + preset + '){' + insightFields + '}';
+
+    const adsetId = document.getElementById('metaAdsetSel')?.value || '';
+    let url;
+    if (adsetId) {
+      // Filter by specific adset
+      url = 'https://graph.facebook.com/v19.0/' + adsetId + '/ads?fields=' + encodeURIComponent(adFields) + '&limit=100&access_token=' + metaToken;
+    } else if (campId) {
+      url = 'https://graph.facebook.com/v19.0/' + campId + '/ads?fields=' + encodeURIComponent(adFields) + '&limit=100&access_token=' + metaToken;
+    } else {
+      url = 'https://graph.facebook.com/v19.0/' + accountId + '/ads?fields=' + encodeURIComponent(adFields) + '&limit=100&access_token=' + metaToken;
+    }
+
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const ads = data.data || [];
+    if (!ads.length) throw new Error('Nenhum anúncio encontrado nessa campanha/período.');
+
+    status.textContent = '⏳ Processando ' + ads.length + ' anúncios...';
+
+    let totalSpend = 0;
+    let totalPurchases = 0;
+    const lines = ['Criativo | Status | Gasto | Compras | CPA | ROAS | CTR | Frequência | Impressões'];
+
+    for (const ad of ads) {
+      const ins = ad.insights?.data?.[0];
+      const statusLabel = ad.status === 'ACTIVE' ? 'Ativo' : 'Pausado';
+      if (!ins) {
+        lines.push(ad.name + ' | ' + statusLabel + ' | $0.00 | 0 | $0.00 | 0.00x | 0.00% | 0.0 | 0');
+        continue;
+      }
+
+      const spend = parseFloat(ins.spend || 0);
+      totalSpend += spend;
+      const impressions = parseInt(ins.impressions || 0);
+      const ctr = parseFloat(ins.ctr || 0);
+      const cpp = parseFloat(ins.cpp || 0);
+      const freq = parseFloat(ins.frequency || 0);
+
+      const actions = ins.actions || [];
+      const purchases = parseInt(
+        (actions.find(a => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase') || {}).value || 0
+      );
+      totalPurchases += purchases;
+
+      const roas = spend > 0 && purchases > 0 ? (purchases * commission) / spend : 0;
+      const cpaReal = purchases > 0 ? spend / purchases : 0;
+
+      lines.push(ad.name + ' | ' + statusLabel + ' | $' + spend.toFixed(2) + ' | ' + purchases + ' | $' + (cpaReal > 0 ? cpaReal.toFixed(2) : cpp.toFixed(2)) + ' | ' + roas.toFixed(2) + 'x | ' + ctr.toFixed(2) + '% | ' + freq.toFixed(1) + ' | ' + impressions);
+    }
+
+    renderDataPreview(lines.join('\n'));
+    document.getElementById('pixelEvents').value = totalPurchases;
+    document.getElementById('numAdsets').value = ads.filter(a => a.status === 'ACTIVE').length;
+
+    status.textContent = '✓ ' + ads.length + ' anúncios carregados — Gasto: $' + totalSpend.toFixed(2) + ' — Compras: ' + totalPurchases;
+    status.style.color = 'var(--green)';
+    document.getElementById('metaLoadBtn').disabled = false;
+    showNotif('✓ ' + ads.length + ' criativos carregados!');
+    document.getElementById('campaignData').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  } catch(err) {
+    status.textContent = '✕ ' + err.message;
+    status.style.color = 'var(--red)';
+    document.getElementById('metaLoadBtn').disabled = false;
+    showNotif('✕ ' + err.message);
+  }
+}
+
+// ===================== DATA PREVIEW TABLE =====================
+let rawDataValue = '';
+
+function syncRawData(val) {
+  rawDataValue = val;
+  // sync to hidden textarea too
+  const hidden = document.getElementById('campaignData');
+  if (hidden) hidden.value = val;
+}
+
+function getCampaignData() {
+  // Return from whichever source has data
+  const empty = document.getElementById('campaignDataEmpty');
+  const raw = document.getElementById('campaignData');
+  return (raw && raw.value.trim()) || (empty && empty.value.trim()) || rawDataValue;
+}
+
+function toggleRawData() {
+  const preview = document.getElementById('dataPreviewWrap');
+  const rawWrap = document.getElementById('rawDataWrap');
+  if (rawWrap.style.display === 'none') {
+    rawWrap.style.display = 'block';
+    preview.style.display = 'none';
+  } else {
+    rawWrap.style.display = 'none';
+    preview.style.display = 'block';
+  }
+}
+
+function renderDataPreview(csvText) {
+  const lines = csvText.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return;
+
+  const headers = lines[0].split('|').map(h => h.trim());
+  const rows = lines.slice(1);
+
+  // Find column indices
+  const idx = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+  const iName = 0;
+  const iStatus = idx('status');
+  const iGasto = idx('gasto') >= 0 ? idx('gasto') : idx('spend');
+  const iCompras = idx('compras') >= 0 ? idx('compras') : idx('purchase');
+  const iCPA = idx('cpa') >= 0 ? idx('cpa') : idx('cpp');
+  const iROAS = idx('roas');
+  const iCTR = idx('ctr');
+  const iFreq = idx('freq') >= 0 ? idx('freq') : idx('frequê');
+  const iImp = idx('impres');
+
+  const maxCPA = parseFloat(document.getElementById('limitCPA')?.value) || 120;
+  const okCPA = parseFloat(document.getElementById('maxCPA')?.value) || 80;
+  const minROAS = parseFloat(document.getElementById('minROAS')?.value) || 2.5;
+
+  let thead = '<thead><tr>';
+  const visibleCols = [
+    {label:'Criativo'}, {label:'Status'}, {label:'Gasto'}, {label:'Compras'},
+    {label:'CPA'}, {label:'ROAS'}, {label:'CTR'}, {label:'Freq.'}, {label:'Impressões'}
+  ];
+  visibleCols.forEach(c => {
+    thead += '<th>' + c.label + '</th>';
+  });
+  thead += '</tr></thead>';
+
+  let tbody = '<tbody>';
+  rows.forEach(row => {
+    const cells = row.split('|').map(c => c.trim());
+    const get = (i) => i >= 0 && i < cells.length ? cells[i] : '—';
+
+    const name = get(iName);
+    const status = get(iStatus);
+    const gasto = get(iGasto);
+    const compras = get(iCompras);
+    const cpa = get(iCPA);
+    const roas = get(iROAS);
+    const ctr = get(iCTR);
+    const freq = get(iFreq);
+    const imp = iImp >= 0 ? get(iImp) : '—';
+
+    const cpaNum = parseFloat(cpa.replace(/[^0-9.]/g,'')) || 0;
+    const roasNum = parseFloat(roas.replace(/[^0-9.]/g,'')) || 0;
+    const ctrNum = parseFloat(ctr.replace(/[^0-9.]/g,'')) || 0;
+    const freqNum = parseFloat(freq.replace(/[^0-9.]/g,'')) || 0;
+    const comprasNum = parseInt(compras) || 0;
+
+    const cpaClass = comprasNum === 0 ? 'td-n' : cpaNum <= okCPA ? 'td-g' : cpaNum <= maxCPA ? 'td-y' : 'td-r';
+    const roasClass = comprasNum === 0 ? 'td-n' : roasNum >= minROAS ? 'td-g' : roasNum >= minROAS * 0.7 ? 'td-y' : 'td-r';
+    const ctrClass = ctrNum >= 2 ? 'td-g' : ctrNum >= 1 ? 'td-y' : ctrNum > 0 ? 'td-r' : 'td-n';
+    const freqClass = freqNum === 0 ? 'td-n' : freqNum <= 3.5 ? 'td-g' : 'td-r';
+    const statusHtml = status.toLowerCase().includes('ativ') || status.toLowerCase().includes('active')
+      ? '<span class="td-status-a">● ATIVO</span>'
+      : '<span class="td-status-p">● PAUSADO</span>';
+
+    tbody += '<tr>' +
+      '<td class="td-name">' + name + '</td>' +
+      '<td>' + statusHtml + '</td>' +
+      '<td class="td-n">' + gasto + '</td>' +
+      '<td class="td-n" style="text-align:center">' + compras + '</td>' +
+      '<td class="' + cpaClass + '">' + (comprasNum === 0 ? '—' : cpa) + '</td>' +
+      '<td class="' + roasClass + '">' + (comprasNum === 0 ? '—' : roas) + '</td>' +
+      '<td class="' + ctrClass + '">' + ctr + '</td>' +
+      '<td class="' + freqClass + '">' + freq + '</td>' +
+      '<td class="td-n">' + imp + '</td>' +
+    '</tr>';
+  });
+  tbody += '</tbody>';
+
+  document.getElementById('dataPreviewTable').innerHTML = thead + tbody;
+  document.getElementById('emptyDataWrap').style.display = 'none';
+  document.getElementById('dataPreviewWrap').style.display = 'block';
+  document.getElementById('rawDataWrap').style.display = 'none';
+
+  // Keep hidden textarea in sync
+  const hidden = document.getElementById('campaignData');
+  if (hidden) hidden.value = csvText;
+  rawDataValue = csvText;
+}
+
+// ===================== LEARNING PHASE TOGGLE =====================
+const learningLabels = {
+  learning: 'Campanha em aprendizado ativo — evitar mudanças bruscas',
+  learning_limited: 'Aprendizado limitado — poucos eventos, considerar consolidar ad sets',
+  active: 'Saiu do aprendizado — otimizações podem ser feitas normalmente'
+};
+const learningColors = {
+  learning: 'var(--yellow)',
+  learning_limited: 'var(--red)',
+  active: 'var(--green)'
+};
+
+function setLearning(val) {
+  document.getElementById('learningPhase').value = val;
+  document.getElementById('learningLabel').textContent = learningLabels[val];
+  document.getElementById('learningLabel').style.color = learningColors[val];
+  ['btnLearning','btnLimited','btnActive'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const map = {learning:'btnLearning', learning_limited:'btnLimited', active:'btnActive'};
+  document.getElementById(map[val]).classList.add('active');
+}
+
+
+function toggleCustomDate() {
+  const preset = document.getElementById('metaPreset').value;
+  const range = document.getElementById('customDateRange');
+  if (preset === 'custom') {
+    range.classList.add('show');
+    const today = new Date();
+    const week = new Date(today); week.setDate(today.getDate()-7);
+    document.getElementById('customDateTo').value = today.toISOString().split('T')[0];
+    document.getElementById('customDateFrom').value = week.toISOString().split('T')[0];
+  } else {
+    range.classList.remove('show');
+  }
+}
+</script>
+</body>
+</html>
